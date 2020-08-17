@@ -1,18 +1,22 @@
 #include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "muduo/inc/mutex.h"
 #include "muduo/inc/thread.h"
+#include "muduo/inc/eventLoop.h"
 
 using namespace std;
 using namespace muduo;
 
-void *func(void *){
-    Mutex mutex;
-    cout << "this is func " << pthread_self() << endl;
-    MutexLockGuard gurad(mutex);
-    cout << "lock " << pthread_self() << endl;
-    cout << "end " << pthread_self() << endl;
-    return nullptr;
+
+void *func(void*){
+    EventLoop loop;
+    EventLoop loop1;
+    loop.loop();
+    return NULL;
 }
 
 int main()
@@ -20,9 +24,11 @@ int main()
 
     cout << "yixi-test begin" << endl;
     Thread thread(func);
+    EventLoop loop;
     thread.start();
-    cout << "this is main " << pthread_self() << endl;
-    thread.join(nullptr);
+    loop.loop();
+    pthread_exit(0);
+
     cout << "yixi-test end" << endl;
 
     return 0;
