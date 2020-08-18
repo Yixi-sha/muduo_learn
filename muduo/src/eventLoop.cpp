@@ -1,4 +1,5 @@
 #include "../inc/eventLoop.h"
+#include "../inc/log.h"
 
 
 using namespace std;
@@ -8,7 +9,7 @@ __thread EventLoop* loopInThisThread = nullptr;
 
 EventLoop::EventLoop(): tid_(pthread_self()){
     if(loopInThisThread != nullptr){
-       err("anther eventloop " << loopInThisThread->tid_ );
+        LOG_ERROR << "anther eventloop " << loopInThisThread->tid_  <<endl;
     }else{
         loopInThisThread = this;
     }
@@ -17,7 +18,7 @@ EventLoop::EventLoop(): tid_(pthread_self()){
 
 EventLoop::~EventLoop(){
     if(looping_){
-       err("looping!!!!"); 
+       LOG_ERROR << "looping!!!!" << endl;
     }
     loopInThisThread = nullptr;
 }
@@ -28,7 +29,7 @@ EventLoop* EventLoop::get_event_loop_of_current_thread(){
 
 void EventLoop::loop(){
     if(looping_)
-        err("thread looping!");
+        LOG_ERROR << "thread looping!" << endl;
     looping_ = true;
 
     poll(NULL, 0, 5 * 1000);

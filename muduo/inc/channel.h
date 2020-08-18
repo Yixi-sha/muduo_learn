@@ -26,10 +26,36 @@ private:
     static const int kReadEvent_;
     static const int kWriteEvent_;
     static const int kErrorEvent_;
+
+    void update();
 public:
-    Channel();
+    Channel(EventLoop *eventLoop, int fd);
     ~Channel();
+
+    void handle_event();
+    bool set_read_callback(EventCallback& cb);
+    bool set_write_callback(EventCallback& cb);
+    bool set_error_callback(EventCallback& cb);
+
+    int fd() const;
+
+    int events() const;
+    bool set_revents(int revent);
+    bool is_none_event() const;
     
+    bool enable_read();
+    void disable_read();
+    bool enable_write();
+    void disable_write();
+    //bool enable_error();
+    //void disable_error();
+    bool enable_all();
+    void disable_all();
+    
+    int index() const;
+    bool set_index(int index);
+
+    EventLoop* owner_loop() const;
 };
 
 }

@@ -48,6 +48,8 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "typeinfo": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "bit": "cpp",
+        "map": "cpp"
     }
 }
