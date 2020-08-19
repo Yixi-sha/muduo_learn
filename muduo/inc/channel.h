@@ -3,10 +3,12 @@
 
 #include <functional>
 
-#include "eventLoop.h"
+
 #include "noncopyable.h"
 
 namespace muduo{
+class EventLoop;
+
 class Channel : Noncopyable{
 public:
     typedef std::function<void()> EventCallback;
@@ -33,9 +35,9 @@ public:
     ~Channel();
 
     void handle_event();
-    bool set_read_callback(EventCallback& cb);
-    bool set_write_callback(EventCallback& cb);
-    bool set_error_callback(EventCallback& cb);
+    bool set_read_callback(const EventCallback& cb);
+    bool set_write_callback(const EventCallback& cb);
+    bool set_error_callback(const EventCallback& cb);
 
     int fd() const;
 
@@ -47,8 +49,6 @@ public:
     void disable_read();
     bool enable_write();
     void disable_write();
-    //bool enable_error();
-    //void disable_error();
     bool enable_all();
     void disable_all();
     

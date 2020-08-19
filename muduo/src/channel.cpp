@@ -1,5 +1,7 @@
 #include "../inc/channel.h"
-#include "../inc/log.h"
+
+
+#include "eventLoop.h"
 
 namespace muduo{
 
@@ -12,18 +14,21 @@ Channel::Channel(EventLoop *eventLoop, int fd)
 :eventLoop_(eventLoop), fd_(fd), events_(0), revents_(0),index_(-1){
 
 }
+Channel::~Channel(){
 
-bool Channel::set_read_callback(EventCallback& cb){
+}
+
+bool Channel::set_read_callback(const EventCallback& cb){
     readCallback_ = cb;
     return true;
 }
 
-bool Channel::set_write_callback(EventCallback& cb){
+bool Channel::set_write_callback(const EventCallback& cb){
     writeCallback_ = cb;
     return true;
 }
 
-bool Channel::set_error_callback(EventCallback& cb){
+bool Channel::set_error_callback(const EventCallback& cb){
     errorCallback_ = cb;
     return true;
 }
@@ -58,14 +63,6 @@ void Channel::disable_write(){
     events_ &= ~kWriteEvent_;
     update();
 }
-
-/*bool Channel::enable_error(){
-    if(errorCallback_.target<void()>() == nullptr){
-        return false;
-    }
-    return true;
-}*/
-//void Channel::disable_error();
 
 bool Channel::enable_all(){
     return enable_read() && enable_write();
@@ -105,6 +102,23 @@ void Channel::handle_event(){
         if(writeCallback_)
             writeCallback_();
     }
+}
+
+bool Channel::is_none_event() const{
+    return events_ == Channel::kNoneEvent_;
+}
+
+void Channel::update(){
+    eventLoop_->update_channel(this);
+}
+
+bool Channel::set_revents(int revent){
+    revents_ = revent;
+    return true;
+}
+
+int Channel::events() const{
+    return events_;
 }
 
 

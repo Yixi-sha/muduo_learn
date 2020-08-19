@@ -9,6 +9,13 @@ using namespace std;
 
 namespace muduo{
 
+#define err(s) do{\
+    cout << s << endl;\
+    cout << __FILE__ <<": "<< __LINE__ << endl;\
+    exit(1);\
+}while(0)
+
+
 class Log{
 public:
     enum LogLevel
@@ -20,6 +27,7 @@ public:
         ERROR,
         FATAL,
     };
+    static const char *LOG_PATH;
 private:
     enum LogLevel logLevel_;
     shared_ptr<ofstream> out_;
@@ -97,19 +105,19 @@ public:
     }
 };
 
-const char *LOG_PATH = nullptr;
 
-#define LOG_TRACE Log(__FILE__, __LINE__, __func__, Log::TRACE, LOG_PATH).stream()
 
-#define LOG_DEBUG Log(__FILE__, __LINE__, __func__, Log::DEBUG, LOG_PATH).stream()
+#define LOG_TRACE Log(__FILE__, __LINE__, __func__, Log::TRACE, nullptr).stream()
 
-#define LOG_INFO Log(__FILE__, __LINE__, __func__, Log::INFO, LOG_PATH).stream()
+#define LOG_DEBUG Log(__FILE__, __LINE__, __func__, Log::DEBUG, nullptr).stream()
 
-#define LOG_WARN Log(__FILE__, __LINE__, __func__, Log::WARN, LOG_PATH).stream()
+#define LOG_INFO Log(__FILE__, __LINE__, __func__, Log::INFO, nullptr).stream()
 
-#define LOG_ERROR Log(__FILE__, __LINE__, __func__, Log::ERROR, LOG_PATH).stream()
+#define LOG_WARN Log(__FILE__, __LINE__, __func__, Log::WARN, nullptr).stream()
 
-#define LOG_FATAL Log(__FILE__, __LINE__, __func__, Log::FATAL, LOG_PATH).stream()
+#define LOG_ERROR Log(__FILE__, __LINE__, __func__, Log::ERROR, nullptr).stream()
+
+#define LOG_FATAL Log(__FILE__, __LINE__, __func__, Log::FATAL, nullptr).stream()
 
 }
 

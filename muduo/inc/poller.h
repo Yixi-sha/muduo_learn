@@ -2,9 +2,14 @@
 #define __MY_POLLER_H__
 
 #include "channel.h"
+#include "timestamp.h"
 
 #include <vector>
 #include <map>
+
+extern "C"{
+#include <poll.h>
+}
 
 namespace muduo {
 
@@ -14,16 +19,16 @@ class Poller : Noncopyable{
 private:
     EventLoop *eventLoop_;
 
-    vector<struct pollfd> pollFdList_;
+    vector<struct pollfd> pollfds_;
     map<int, Channel*> channels_;
 
-    void fill_active_channels(int eventNum, vector<Channel*> *activeChannels) const;
+    void fill_active_channels(int eventNum, vector<Channel*> *activeChannels);
 public:
     Poller(EventLoop *eventLoop);
     ~Poller();
 
-    //Timestamp poll(int timeOutMs, vector<Channel*> *activeChannels);
-    void update_channel(Channel *channel);
+    Timestamp poll(int timeOutMs, vector<Channel*> *activeChannels);
+    bool update_channel(Channel *channel);
     bool is_in_loop_thread() const;
 };
 
