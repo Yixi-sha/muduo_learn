@@ -50,6 +50,7 @@
         "typeinfo": "cpp",
         "optional": "cpp",
         "bit": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "cinttypes": "cpp"
     }
 }

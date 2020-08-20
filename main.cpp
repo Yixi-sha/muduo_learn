@@ -15,6 +15,7 @@ extern "C"{
 #include "muduo/inc/timestamp.h"
 #include "muduo/inc/poller.h"
 #include "muduo/inc/channel.h"
+#include "muduo/inc/timer.h"
 
 using namespace std;
 using namespace muduo;
@@ -26,9 +27,16 @@ extern "C"{
 
 EventLoop *g_loop;
 
+
 void timeout(){
-    cout << "timeout" << endl;
-    g_loop->quit();
+    cout <<"timeout!!!!!!!!!!! "<< endl;
+
+}
+
+void *thread_func(void *){
+    cout << "thread_func   " << pthread_self()<< endl;
+    g_loop->run_after(1, timeout);
+    return nullptr;
 }
 
 int main()
@@ -37,17 +45,10 @@ int main()
     cout << "yixi-test begin" << endl;
     EventLoop localLoop;
     g_loop = &localLoop;
-    int timerfd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-    Channel channel(&localLoop, timerfd);
-    channel.set_read_callback(timeout);
-    channel.enable_read();
-
-    struct itimerspec howlong;
-    bzero(&howlong, sizeof(struct itimerspec));
-    howlong.it_value.tv_sec = 5;
-    timerfd_settime(timerfd, 0, &howlong, NULL);
-
+    Thread thread(thread_func);
+    thread.start();
     localLoop.loop();
+    thread.join(nullptr);
     cout << "yixi-test end" << endl;
 
     return 0;

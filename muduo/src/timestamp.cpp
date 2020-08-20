@@ -63,23 +63,23 @@ Timestamp Timestamp::invaild(){
     return Timestamp();
 }
 
-bool Timestamp::operator > (Timestamp& ts){
+bool Timestamp::operator > (const Timestamp& ts) const{
     return us_ > ts.us_;
 }
 
-bool Timestamp::operator >= (Timestamp& ts){
+bool Timestamp::operator >= (const Timestamp& ts) const{
     return us_ >= ts.us_;
 }
 
-bool Timestamp::operator < (Timestamp& ts){
+bool Timestamp::operator < (const Timestamp& ts) const{
     return !operator>=(ts);
 }
 
-bool Timestamp::operator <= (Timestamp& ts){
+bool Timestamp::operator <= (const Timestamp& ts) const{
     return !operator>(ts);
 }
 
-bool Timestamp::operator == (Timestamp& ts){
+bool Timestamp::operator == (const Timestamp& ts) const{
     return us_ == ts.us_;
 }
 

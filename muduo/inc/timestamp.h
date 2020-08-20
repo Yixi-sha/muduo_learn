@@ -30,11 +30,11 @@ public:
 
     static Timestamp invaild();
 
-    bool operator > (Timestamp& ts);
-    bool operator >= (Timestamp& ts);
-    bool operator < (Timestamp& ts);
-    bool operator <= (Timestamp& ts);
-    bool operator == (Timestamp& ts);
+    bool operator > (const Timestamp& ts) const;
+    bool operator >= (const Timestamp& ts) const;
+    bool operator < (const Timestamp& ts) const;
+    bool operator <= (const Timestamp& ts) const;
+    bool operator == (const Timestamp& ts) const;
 
     double diff(Timestamp& ts);
     Timestamp add_time(double seconds);

@@ -14,6 +14,8 @@ extern "C"{
 
 #include "poller.h"
 #include "channel.h"
+#include "timer.h"
+#include "mutex.h"
 
 namespace muduo{
 
@@ -24,6 +26,18 @@ private:
     bool quit_;
     unique_ptr<Poller> poller_;
     vector<Channel*> activeChannels_;
+    unique_ptr<TimerQueue> timerQueue_;
+
+    bool callingPendingFuncBool_;
+    int wakeFd_;
+    unique_ptr<Channel> wakeChannel_;
+    Mutex pendingFuncMutex_;
+    vector<function<void()>> pendingFunc_;
+
+    void queue_in_loop(const function<void()> &cb);
+    void wakeup();
+    void do_pending_func();
+    void handle_read_wake();
 public:
     EventLoop();
     ~EventLoop();
@@ -38,7 +52,13 @@ public:
         return tid_ == pthread_self();
     }
 
+    TimerId run_at(const Timestamp &time, const function<void()> &cb);
+    TimerId run_after(double delay, const function<void()> &cb);
+    TimerId run_every(double interval, const function<void()> &cb);
+
     static EventLoop* get_event_loop_of_current_thread();
+
+    void run_in_loop(const function<void()> cb);
 };
 
 }
