@@ -16,6 +16,7 @@ extern "C"{
 #include "muduo/inc/poller.h"
 #include "muduo/inc/channel.h"
 #include "muduo/inc/timer.h"
+#include "muduo/inc/eventLoopThread.h"
 
 using namespace std;
 using namespace muduo;
@@ -30,13 +31,16 @@ EventLoop *g_loop;
 
 void timeout(){
     cout <<"timeout!!!!!!!!!!! "<< endl;
-
+    cout << "timeout   " << pthread_self()<< endl;
+    g_loop->quit();
 }
 
-void *thread_func(void *){
+int i = 9999;
+
+void *thread_func(void *argv){
     cout << "thread_func   " << pthread_self()<< endl;
-    g_loop->run_after(1, timeout);
-    return nullptr;
+    //g_loop->run_after(1, timeout);
+    return &i;
 }
 
 int main()
@@ -45,10 +49,16 @@ int main()
     cout << "yixi-test begin" << endl;
     EventLoop localLoop;
     g_loop = &localLoop;
-    Thread thread(thread_func);
-    thread.start();
-    localLoop.loop();
-    thread.join(nullptr);
+    EventLoopThread eventLoopThread;
+    EventLoop *otherLoop = eventLoopThread.start_loop();
+    otherLoop->run_in_loop(bind(thread_func, nullptr));
+    cout << "main   " << pthread_self()<< endl;
+    //localLoop.loop();
+    sleep(1);
+    otherLoop->run_in_loop(bind(thread_func, nullptr));
+    sleep(3);
+    otherLoop->quit();
+    sleep(3);
     cout << "yixi-test end" << endl;
 
     return 0;

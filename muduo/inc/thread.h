@@ -2,34 +2,43 @@
 #define __MY_THREAD_H__
 
 #include "noncopyable.h"
+#include <functional>
 
 extern "C"{
 #include <pthread.h>
 }
 
 namespace muduo{
+using namespace std;
 class Thread : Noncopyable{
 private:
-    void* (*func_)(void*);
+    //void* (*func_)(void*);
+    function<void*(void*)> func_;
     pthread_t tid_;
-    void *argc_;
+    void *argv_;
+    bool start_;
 public:
-    Thread(void* (*func)(void*), void *argc = nullptr)
-    : func_(func), tid_(0), argc_(argc){
-
+    Thread(const function<void*(void*)> &func, void *argv = nullptr)
+    : func_(func), tid_(0), argv_(argv), start_(false){
+        
     }
-    int start(){
-        return pthread_create(&tid_, NULL, func_, argc_);
+    Thread(void* (*func)(void*), void *argv = nullptr)
+    : func_(func), tid_(0), argv_(argv){
+        
     }
+    int start();
     pthread_t tid(){
         return tid_;
     }
-    int join(void *status){
+    int join(void **status = nullptr){
         if(status == NULL){
             return pthread_join(tid_, nullptr);
         }else{
-            return pthread_join(tid_, &status);
+            return pthread_join(tid_, status);
         }
+    }
+    bool is_start(){
+        return start_;
     }
 };
 }
