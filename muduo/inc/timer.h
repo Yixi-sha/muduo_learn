@@ -11,7 +11,7 @@
 
 namespace muduo{
 using namespace std;
-class Timer : Noncopyable{
+class Timer : public Noncopyable{
 private:
 function<void()> timeCallback_;
 Timestamp expire_;
@@ -30,7 +30,7 @@ public:
 
 };
 
-class TimerId{
+class TimerId : Object{
 private:
     Timer* value_;
 public:
@@ -41,7 +41,7 @@ public:
 class EventLoop;
 
 
-class TimerQueue : Noncopyable{
+class TimerQueue : public Noncopyable{
 private:
     EventLoop *eventLoop_;
     const int timerFd_;
@@ -52,9 +52,11 @@ private:
     vector<pair<Timestamp, Timer*>> get_expired(Timestamp now);
     bool insert(Timer* timer);
     void reset(vector<pair<Timestamp, Timer*>> &expireds, Timestamp now);
-    void add_timer_in_loop(Timer *timer);
-public:
+    bool add_timer_in_loop(Timer *timer);
+    bool construct_two();
     TimerQueue(EventLoop *eventLoop);
+public:
+    static TimerQueue* construct_timerQueue(EventLoop *eventLoop);
     ~TimerQueue();
 
     TimerId add_timer(const function<void()> cb, Timestamp when, double interval);

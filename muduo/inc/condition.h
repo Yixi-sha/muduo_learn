@@ -5,7 +5,7 @@
 #include "mutex.h"
 
 namespace muduo{
-class Condition : Noncopyable{
+class Condition : public Noncopyable{
 private:
     Mutex &mutex_;
     pthread_cond_t cond_;

@@ -12,7 +12,7 @@ extern "C"{
 using namespace std;
 
 namespace muduo{
-class Mutex : Noncopyable{
+class Mutex : public Noncopyable{
 private:
     pthread_mutex_t mutex_;
     pthread_t holder_;

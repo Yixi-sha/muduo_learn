@@ -9,7 +9,7 @@
 namespace muduo{
 class EventLoop;
 
-class Channel : Noncopyable{
+class Channel : public Noncopyable{
 public:
     typedef std::function<void()> EventCallback;
 private:

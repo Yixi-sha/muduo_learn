@@ -16,23 +16,45 @@ static int createEventfd()
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (evtfd < 0){
     LOG_ERROR << "Failed in eventfd" << endl;
-    abort();
+    return -1;
   }
   return evtfd;
 }
 
 EventLoop::EventLoop()
 : tid_(pthread_self()), looping_(false),quit_(false),poller_(new Poller(this)),
-timerQueue_(new TimerQueue(this)), callingPendingFuncBool_(false), wakeFd_(createEventfd()),
+timerQueue_(TimerQueue::construct_timerQueue(this)), callingPendingFuncBool_(false), wakeFd_(createEventfd()),
 wakeChannel_(new Channel(this, wakeFd_)) /*should Second order structure */{
+    
+   
+}
+
+bool EventLoop::construct_two(){
     if(loopInThisThread != nullptr){
         LOG_ERROR << "anther eventloop " << loopInThisThread->tid_  <<endl;
+        return false;
     }else{
         loopInThisThread = this;
+    }
+    if(wakeFd_ == -1 || wakeChannel_.get() == nullptr || wakeChannel_.get() == nullptr){
+        return false;
     }
     wakeChannel_->set_read_callback(bind(&EventLoop::handle_read_wake, this));
     wakeChannel_->enable_read();
     looping_ = false;
+    return true;
+    
+}
+
+EventLoop* EventLoop::construct_eventLoop(){
+    EventLoop* ret = new EventLoop();
+    if(!ret || !ret->construct_two()){
+        if(ret)
+            delete ret;
+
+        return nullptr;
+    }
+    return ret;
 }
 
 EventLoop::~EventLoop(){
@@ -46,9 +68,11 @@ EventLoop* EventLoop::get_event_loop_of_current_thread(){
     return loopInThisThread;
 }
 
-void EventLoop::loop(){
-    if(looping_)
+bool EventLoop::loop(){
+    if(looping_){
         LOG_ERROR << "thread looping!" << endl;
+        return false;
+    }
     looping_ = true;
     quit_ = false;
     
@@ -60,10 +84,9 @@ void EventLoop::loop(){
         }
         do_pending_func();
     }
-
     cout << "event loop " << this <<" stop looping"<< endl;
-    
     looping_ = false;
+    return true;
 }
 
 void EventLoop::quit(){

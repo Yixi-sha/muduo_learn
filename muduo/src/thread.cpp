@@ -27,7 +27,8 @@ int Thread::start(){
     int ret;
     argv_ = new ThreadTwo(func_, argv_);
     if(!argv_){
-        err("Thread::start()");
+        LOG_ERROR <<  "Thread::start()" << endl;
+        return -1;
     }
     start_ = true;
     if((ret = pthread_create(&tid_, NULL, thread_func, argv_)) != 0){

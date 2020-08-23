@@ -4,12 +4,13 @@
 #include <cstdint>
 #include <utility> 
 #include <string>
+#include "object.h"
 
 namespace muduo{
 
 using namespace std;
 
-class Timestamp{
+class Timestamp : public Object{
 private:
     int64_t us_;
 public:

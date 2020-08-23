@@ -10,7 +10,7 @@ extern "C"{
 
 namespace muduo{
 using namespace std;
-class Thread : Noncopyable{
+class Thread : public  Noncopyable{
 private:
     //void* (*func_)(void*);
     function<void*(void*)> func_;
@@ -36,6 +36,7 @@ public:
         }else{
             return pthread_join(tid_, status);
         }
+        start_ = false;
     }
     bool is_start(){
         return start_;

@@ -2,11 +2,12 @@
 #define __MY_NONCOPYABLE_H__
 
 #include <iostream>
+#include "object.h"
 using namespace std;
 
 namespace muduo{
 
-class Noncopyable{
+class Noncopyable : public Object{
 public:
     Noncopyable() {}
     Noncopyable(const Noncopyable&) = delete;

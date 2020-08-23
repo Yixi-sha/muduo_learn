@@ -19,7 +19,7 @@ extern "C"{
 
 namespace muduo{
 
-class EventLoop : Noncopyable{
+class EventLoop : public  Noncopyable{
 private:
     const pthread_t tid_;
     bool looping_;
@@ -38,11 +38,16 @@ private:
     void wakeup();
     void do_pending_func();
     void handle_read_wake();
-public:
+
+    bool construct_two();
     EventLoop();
+public:
+    
     ~EventLoop();
 
-    void loop();
+    static EventLoop *construct_eventLoop();
+
+    bool loop();
 
     void quit();
 

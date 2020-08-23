@@ -15,7 +15,7 @@ namespace muduo {
 
 using namespace std;
 
-class Poller : Noncopyable{
+class Poller : public Noncopyable{
 private:
     EventLoop *eventLoop_;
 

@@ -47,10 +47,10 @@ int main()
 {
 
     cout << "yixi-test begin" << endl;
-    EventLoop localLoop;
-    g_loop = &localLoop;
+    shared_ptr<EventLoop> localLoop(EventLoop::construct_eventLoop());
+    g_loop = localLoop.get();
     EventLoopThread eventLoopThread;
-    EventLoop *otherLoop = eventLoopThread.start_loop();
+    shared_ptr<EventLoop> otherLoop = eventLoopThread.start_loop();
     otherLoop->run_in_loop(bind(thread_func, nullptr));
     cout << "main   " << pthread_self()<< endl;
     //localLoop.loop();

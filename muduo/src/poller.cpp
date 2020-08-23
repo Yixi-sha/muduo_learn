@@ -50,11 +50,15 @@ bool Poller::update_channel(Channel* channel){
     if(!channel){
         return false;
     }
-    if(!is_in_loop_thread())
-        err("Poller::update_channel is_in_loop_thread()");
+    if(!is_in_loop_thread()){
+        LOG_ERROR << "Poller::update_channel is_in_loop_thread()" << endl;
+        return false;
+    }
+        
     if(channel->index() == -1){
         if(channels_.find(channel->fd()) != channels_.end()){
-            err("Poller::update_channel  channels_.find(channel->fd) != channels_.end()");
+            LOG_ERROR << "Poller::update_channel  channels_.find(channel->fd) != channels_.end()" << endl;
+            return false;
         }
         struct pollfd pfd;
         pfd.fd = channel->fd();
@@ -66,16 +70,22 @@ bool Poller::update_channel(Channel* channel){
     }else{
         int idx = channel->index();
         if(channels_.find(channel->fd()) == channels_.end()){
-            err("Poller::update_channel  channels_.find(channel->fd) == channels_.end()");
+            LOG_ERROR <<  "Poller::update_channel  channels_.find(channel->fd) == channels_.end()" << endl;
+            return false;
         }
-        if(idx < 0 || idx >= pollfds_.size())
-            err("Poller::update_channel  idx < 0 || idx >= pollfds_.size()");
+        if(idx < 0 || idx >= pollfds_.size()){
+            LOG_ERROR << "Poller::update_channel  idx < 0 || idx >= pollfds_.size()" << endl;
+            return false;
+        }
+            
         if(channels_[channel->fd()] != channel){
-            err("Poller::update_channel  channels_[channel->fd()] != channel");
+            LOG_ERROR <<"Poller::update_channel  channels_[channel->fd()] != channel" << endl;
+            return false;
         }
         struct pollfd &pfd = pollfds_[idx];
         if(pfd.fd != -1 || pfd.fd != channel->fd()){
-            err("Poller::update_channel pfd.fd != -1 || pfd.fd != channel->fd()");
+            LOG_ERROR << "Poller::update_channel pfd.fd != -1 || pfd.fd != channel->fd()" << endl;
+            return false;
         }
         pfd.events = static_cast<short>(channel->events());
         pfd.revents = 0;

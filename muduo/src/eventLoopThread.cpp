@@ -6,7 +6,7 @@ namespace muduo{
 using namespace std;
 
 EventLoopThread::EventLoopThread()
-:eventLoop_(NULL), exiting_(false), 
+:eventLoop_(nullptr), exiting_(false), 
 thread_(bind(&EventLoopThread::thread_func, this,  placeholders::_1)),
 mutex_(), cond_(mutex_){
 
@@ -17,14 +17,18 @@ EventLoopThread::~EventLoopThread(){
     thread_.join();
 }
 
-EventLoop *EventLoopThread::start_loop(){
+shared_ptr<EventLoop>  EventLoopThread::start_loop(){
     if(thread_.is_start()){
-        err("EventLoopThread::start_loop() thread_.is_start()");
+        LOG_ERROR << "EventLoopThread::start_loop() thread_.is_start()" << endl;
+        return eventLoop_;
     }
-    thread_.start();
+    if(thread_.start()){
+        return eventLoop_;
+    }
+    
     {
         MutexLockGuard guard(mutex_);
-        while(eventLoop_ == nullptr){
+        while(eventLoop_.get() == nullptr){
             cond_.wait();
         }
     }
@@ -32,13 +36,18 @@ EventLoop *EventLoopThread::start_loop(){
 }
 
 void* EventLoopThread::thread_func(void *argv){
-    EventLoop eventLoop;
+    shared_ptr<EventLoop> eventLoop(EventLoop::construct_eventLoop());
+    if(eventLoop.get() == nullptr){
+        LOG_ERROR << "EventLoopThread::thread_func " << endl;
+        return nullptr;
+    }
     {
         MutexLockGuard guard(mutex_);
-        eventLoop_ = &eventLoop;
+        eventLoop_ = eventLoop;
         cond_.notify();
     }
-    eventLoop.loop();
+    eventLoop->loop();
+
     return nullptr;
 }
 }

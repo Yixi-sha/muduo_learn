@@ -51,6 +51,7 @@
         "optional": "cpp",
         "bit": "cpp",
         "map": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "set": "cpp"
     }
 }

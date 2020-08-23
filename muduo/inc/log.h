@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "object.h"
+
 using namespace std;
 
 namespace muduo{
@@ -16,7 +18,7 @@ namespace muduo{
 }while(0)
 
 
-class Log{
+class Log : public Object{
 public:
     enum LogLevel
     {

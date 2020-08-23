@@ -6,12 +6,15 @@
 #include "mutex.h"
 #include "condition.h"
 
+#include <memory>
+
 namespace muduo{
+using namespace std;
 class EventLoop;
 
-class EventLoopThread : Noncopyable{
+class EventLoopThread : public Noncopyable{
 private:
-    EventLoop *eventLoop_;
+    shared_ptr<EventLoop> eventLoop_;
     bool exiting_;
     Thread thread_;
     Mutex mutex_;
@@ -21,7 +24,7 @@ private:
 public:
     EventLoopThread();
     ~EventLoopThread();
-    EventLoop *start_loop();
+    shared_ptr<EventLoop> start_loop();
 };
 
 }

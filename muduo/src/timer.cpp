@@ -2,6 +2,7 @@
 #include "../inc/log.h"
 #include "../inc/channel.h"
 #include "../inc/eventLoop.h"
+#include "../inc/object.h"
 
 extern "C"{
 #include <unistd.h>
@@ -133,7 +134,8 @@ bool TimerQueue::insert(Timer* timer){
     }
     pair<set<pair<Timestamp, Timer*>>::iterator, bool> res = timers_.insert(std::make_pair(when, timer));
     if(!res.second){
-        err("TimerQueue::insert");
+        LOG_ERROR << "TimerQueue::insert" << endl;
+        return false;
     }
     return earliestChanged;
 }
@@ -144,25 +146,48 @@ timers_(){
     channel_.set_read_callback(bind(&TimerQueue::handle_read, this));
     channel_.enable_read();
 }
+
+bool TimerQueue::construct_two(){
+    if(timerFd_ <= 0)
+        return false;
+    return true;
+}
+
+TimerQueue* TimerQueue::construct_timerQueue(EventLoop *eventLoop){
+    TimerQueue* ret = new TimerQueue(eventLoop);
+    if(!ret || ret->construct_two()){
+        if(ret)
+            delete ret;
+        return nullptr;
+    }
+    return ret;
+}
+
 TimerQueue::~TimerQueue(){
-    ::close(timerFd_);
+    if(timerFd_ > 0)
+        ::close(timerFd_);
     for(auto &timer : timers_)
         delete timer.second;
 }
 
-void TimerQueue::add_timer_in_loop(Timer *timer){
+bool TimerQueue::add_timer_in_loop(Timer *timer){
     if(!eventLoop_->is_in_loop_thread()){
-        err("TimerQueue::add_timer_in_loop");
+        LOG_ERROR << "TimerQueue::add_timer_in_loop" << endl;
+        return false;
     }
     if(insert(timer)){
         resetTimerfd(timerFd_, timer->expire());
     }
+    return true;
 }
 
 TimerId TimerQueue::add_timer(const function<void()> cb, Timestamp when, double interval){
-    Timer *timer = new Timer{cb ,when, interval};
-    if(!timer)
-        err("TimerQueue::add_timer");
+    Timer *timer =  new Timer{cb ,when, interval};
+    if(!timer){
+        LOG_ERROR <<"TimerQueue::add_timer" << endl;
+        return TimerId(timer); 
+    }
+        
         
     eventLoop_->run_in_loop(bind(&TimerQueue::add_timer_in_loop, this, timer));
     return TimerId(timer);
