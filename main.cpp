@@ -17,6 +17,7 @@ extern "C"{
 #include "muduo/inc/channel.h"
 #include "muduo/inc/timer.h"
 #include "muduo/inc/eventLoopThread.h"
+#include "muduo/inc/TcpServer.h"
 
 using namespace std;
 using namespace muduo;
@@ -29,36 +30,12 @@ extern "C"{
 EventLoop *g_loop;
 
 
-void timeout(){
-    cout <<"timeout!!!!!!!!!!! "<< endl;
-    cout << "timeout   " << pthread_self()<< endl;
-    g_loop->quit();
-}
-
-int i = 9999;
-
-void *thread_func(void *argv){
-    cout << "thread_func   " << pthread_self()<< endl;
-    //g_loop->run_after(1, timeout);
-    return &i;
-}
-
 int main()
 {
-
     cout << "yixi-test begin" << endl;
-    shared_ptr<EventLoop> localLoop(EventLoop::construct_eventLoop());
-    g_loop = localLoop.get();
-    EventLoopThread eventLoopThread;
-    shared_ptr<EventLoop> otherLoop = eventLoopThread.start_loop();
-    otherLoop->run_in_loop(bind(thread_func, nullptr));
-    cout << "main   " << pthread_self()<< endl;
-    //localLoop.loop();
-    sleep(1);
-    otherLoop->run_in_loop(bind(thread_func, nullptr));
-    sleep(3);
-    otherLoop->quit();
-    sleep(3);
+    shared_ptr<TcpServer> t(TcpServer::construct_tcpServer("0.0.0.0", "8888"));
+    cout << t->get_fd() << endl; 
+    
     cout << "yixi-test end" << endl;
 
     return 0;

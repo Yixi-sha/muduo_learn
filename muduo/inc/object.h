@@ -19,7 +19,9 @@ public:
     void operator delete[] (void* p){
         free(p);
     }
-    
+    virtual ~Object(){
+
+    }
 };
 
 }

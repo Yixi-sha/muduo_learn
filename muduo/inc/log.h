@@ -17,6 +17,16 @@ namespace muduo{
     exit(1);\
 }while(0)
 
+#define err_msg(s) do{  \
+    if(err_flag == 1){ \
+        syslog(LOG_ERR,s); \
+        syslog(LOG_ERR," %s %s %d\n", hstrerror(errno), __FILE__, __LINE__); \
+    }else{ \
+        printf(s); \
+        printf(" %s %s %d\n", hstrerror(errno), __FILE__, __LINE__); \
+    } \
+}while(0)
+
 
 class Log : public Object{
 public:
@@ -111,9 +121,9 @@ public:
 
 #define LOG_TRACE Log(__FILE__, __LINE__, __func__, Log::TRACE, nullptr).stream()
 
-#define LOG_DEBUG Log(__FILE__, __LINE__, __func__, Log::DEBUG, nullptr).stream()
+#define LOG_DEBUG_MY Log(__FILE__, __LINE__, __func__, Log::DEBUG, nullptr).stream()
 
-#define LOG_INFO Log(__FILE__, __LINE__, __func__, Log::INFO, nullptr).stream()
+#define LOG_INFO_MY Log(__FILE__, __LINE__, __func__, Log::INFO, nullptr).stream()
 
 #define LOG_WARN Log(__FILE__, __LINE__, __func__, Log::WARN, nullptr).stream()
 
