@@ -2,7 +2,7 @@
 
 TYPE := cpp
 CC := g++
-
+DEBUG:=true
 ifeq ($(DEBUG),true)
 CFLAGS += -g
 endif

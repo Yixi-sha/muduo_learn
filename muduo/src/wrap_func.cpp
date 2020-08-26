@@ -53,6 +53,23 @@ int Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen){
     return n;
 }
 
+int Accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags){
+    int n;
+    while(1){
+        if((n = accept4(sockfd, addr, addrlen, flags)) < 0){
+            if(errno == EINTR){
+                continue;
+            }else{
+                LOG_ERROR <<  "accept4" << endl;
+                break;
+            }
+        }
+        break;
+    }    
+    return n;
+}
+
+
 int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen){ // don`t right if erron == EINTR close then connect
     int n;
     if((n = connect(sockfd, addr, addrlen)) < 0)
@@ -72,8 +89,7 @@ void Pthread_mutex_lock(pthread_mutex_t *mptr){
 int Inet_pton(int af, const char *src, void *dst){
     int n;
     if((n = inet_pton(af, src, dst)) < 0)
-        err("Inet_pton");
-    
+        LOG_ERROR << "Inet_pton" << endl;
     return n;
 }
 
@@ -141,7 +157,8 @@ ssize_t Read(int fd, void *buf, size_t count){
                 continue;
             }
             else{
-                err("Read error");
+                LOG_ERROR <<  "Read error" << endl;
+                break;
             }
         }else{
             break;
@@ -157,7 +174,8 @@ ssize_t Write(int fd, void *buf, size_t count){
             if(errno == EINTR)
                 continue;
             else{
-                err("Read error");
+                LOG_ERROR << "Write error" << endl;
+                break;
             }
         }
         break;

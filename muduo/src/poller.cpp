@@ -50,6 +50,7 @@ bool Poller::update_channel(Channel* channel){
     if(!channel){
         return false;
     }
+    //cout << "update" << endl;
     if(!is_in_loop_thread()){
         LOG_ERROR << "Poller::update_channel is_in_loop_thread()" << endl;
         return false;
@@ -58,6 +59,7 @@ bool Poller::update_channel(Channel* channel){
     if(channel->index() == -1){
         if(channels_.find(channel->fd()) != channels_.end()){
             LOG_ERROR << "Poller::update_channel  channels_.find(channel->fd) != channels_.end()" << endl;
+            LOG_ERROR << channel->index() << endl;
             return false;
         }
         struct pollfd pfd;

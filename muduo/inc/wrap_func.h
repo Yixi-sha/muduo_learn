@@ -79,6 +79,7 @@ struct IfiInfo{
 int Min(int a, int b);
 void Pthread_mutex_lock(pthread_mutex_t *mptr);
 int Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+int Accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
 int Listen(int sockfd, int backlog);
 int Bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int Socket(int family, int type, int protocol);

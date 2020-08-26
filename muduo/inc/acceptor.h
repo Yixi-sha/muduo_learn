@@ -1,7 +1,7 @@
 #ifndef __MY_ACCPTOR_H__
 #define __MY_ACCPTOR_H__
 
-#include "TcpServer.h"
+#include "TcpServerFd.h"
 #include "channel.h"
 #include "eventLoop.h"
 
@@ -10,10 +10,16 @@
 
 namespace muduo{
 using namespace std;
-class Acceptor :Noncopyable{
+
+class AcceptFd : public SocketFd{
+public:
+    AcceptFd(int fd);
+};
+
+class Acceptor : public Noncopyable{
 private:
-    shared_ptr<TcpServer>  tcpServer_;
-    function<void(int, shared_ptr<sockaddr>, socklen_t)> acceptCallback_;
+    shared_ptr<TcpServerFd>  tcpServer_;
+    function<void(AcceptFd)> acceptCallback_;
     EventLoop *eventLoop_;
     shared_ptr<Channel> channel_;
     bool listening_;
@@ -29,9 +35,11 @@ public:
         return listening_;
     }
     bool listen(int num = 20);
-    void set_new_connect_callbakc(function<void(int, shared_ptr<sockaddr>, socklen_t)> cb );
+    void set_new_connect_callback(function<void(AcceptFd)> cb );
     
 };
+
+
 }
 
 

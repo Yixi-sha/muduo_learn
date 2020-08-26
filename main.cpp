@@ -4,10 +4,12 @@
 #include <string>
 #include <vector>
 
+
 extern "C"{
 #include <sys/timerfd.h>
+#include <unistd.h>
+#include <sys/eventfd.h>
 }
-
 
 #include "muduo/inc/mutex.h"
 #include "muduo/inc/thread.h"
@@ -18,6 +20,7 @@ extern "C"{
 #include "muduo/inc/timer.h"
 #include "muduo/inc/eventLoopThread.h"
 #include "muduo/inc/TcpServer.h"
+#include "muduo/inc/acceptor.h"
 
 using namespace std;
 using namespace muduo;
@@ -28,15 +31,18 @@ extern "C"{
 }
 
 EventLoop *g_loop;
-
-
-int main()
-{
+void test(AcceptFd acceptFd){
+    cout <<acceptFd.get_fd() << endl;
+}
+int main(){
     cout << "yixi-test begin" << endl;
-    shared_ptr<TcpServer> t(TcpServer::construct_tcpServer("0.0.0.0", "8888"));
-    cout << t->get_fd() << endl; 
-    
+    shared_ptr<EventLoop> eventLoop(EventLoop::construct_eventLoop());
+     
+    shared_ptr<Acceptor> acceptor(Acceptor::construct_accpetor("ubuntu","8888", eventLoop.get()));
+    acceptor->set_new_connect_callback(test);
+    acceptor->listen();
+    eventLoop->loop();
+    cout << eventLoop.get() << endl;
     cout << "yixi-test end" << endl;
-
     return 0;
 }

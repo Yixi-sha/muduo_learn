@@ -1,32 +1,35 @@
 #include "../inc/eventLoop.h"
 #include "../inc/log.h"
 
+
 extern "C"{
+#include <sys/timerfd.h>
 #include <unistd.h>
 #include <sys/eventfd.h>
 }
+
 
 using namespace std;
 namespace muduo{
 
 __thread EventLoop* loopInThisThread = nullptr;
 
-static int createEventfd()
+int createEventfd()
 {
-  int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-  if (evtfd < 0){
-    LOG_ERROR << "Failed in eventfd" << endl;
-    return -1;
-  }
-  return evtfd;
+    cout << "s createEventfd"<< endl;
+    int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    if (evtfd < 0){
+        LOG_ERROR << "Failed in eventfd" << endl;
+        return -1;
+    }
+    
+    cout <<pthread_self() << " evtfd  "<< evtfd << endl;
+    return evtfd;
 }
 
 EventLoop::EventLoop()
-: tid_(pthread_self()), looping_(false),quit_(false),poller_(new Poller(this)),
-timerQueue_(TimerQueue::construct_timerQueue(this)), callingPendingFuncBool_(false), wakeFd_(createEventfd()),
-wakeChannel_(new Channel(this, wakeFd_)) /*should Second order structure */{
+: tid_(pthread_self()), looping_(false),quit_(false),callingPendingFuncBool_(false){
     
-   
 }
 
 bool EventLoop::construct_two(){
@@ -36,9 +39,25 @@ bool EventLoop::construct_two(){
     }else{
         loopInThisThread = this;
     }
-    if(wakeFd_ == -1 || wakeChannel_.get() == nullptr || wakeChannel_.get() == nullptr){
+    poller_.reset(new Poller(this));
+    if(!poller_.get()){
         return false;
     }
+    timerQueue_.reset(TimerQueue::construct_timerQueue(this));
+    if(!timerQueue_.get()){
+        cout << "timerQueue_" << endl;
+        return false;
+    }
+    wakeFd_= createEventfd();
+    if(wakeFd_ < 0 )
+        return false;
+    wakeChannel_.reset(new Channel(this, wakeFd_));
+    if(!wakeChannel_.get())
+        return false;
+     
+    
+        
+   
     wakeChannel_->set_read_callback(bind(&EventLoop::handle_read_wake, this));
     wakeChannel_->enable_read();
     looping_ = false;

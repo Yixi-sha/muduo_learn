@@ -12,7 +12,7 @@ const int Channel::kErrorEvent_ = POLLERR;
 
 Channel::Channel(EventLoop *eventLoop, int fd)
 :eventLoop_(eventLoop), fd_(fd), events_(0), revents_(0),index_(-1){
-
+    
 }
 Channel::~Channel(){
 

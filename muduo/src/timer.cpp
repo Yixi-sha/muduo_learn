@@ -8,6 +8,7 @@ extern "C"{
 #include <unistd.h>
 #include <strings.h>
 #include <sys/timerfd.h>
+#include <sys/eventfd.h>
 }
 
 namespace muduo{
@@ -43,11 +44,13 @@ bool Timer::restart(Timestamp now){
 /**********************************TimerQueue**************************************/
 
 int createTimerfd(){
-  int timerfd = ::timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK | TFD_CLOEXEC);
-  if(timerfd < 0){
-    LOG_ERROR << "Failed in timerfd_create" << endl;
-  }
-  return timerfd;
+    cout << "s createTimerfd"<< endl;
+    int timerfd = ::timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK | TFD_CLOEXEC);
+    if(timerfd < 0){
+        LOG_ERROR << "Failed in timerfd_create" << endl;
+    }
+    cout <<pthread_self() <<" timerfd  "<< timerfd  << endl;
+    return timerfd;
 }
 
 void read_timer(int timerfd, Timestamp now){
@@ -155,7 +158,7 @@ bool TimerQueue::construct_two(){
 
 TimerQueue* TimerQueue::construct_timerQueue(EventLoop *eventLoop){
     TimerQueue* ret = new TimerQueue(eventLoop);
-    if(!ret || ret->construct_two()){
+    if(!ret || !ret->construct_two()){
         if(ret)
             delete ret;
         return nullptr;
