@@ -23,8 +23,9 @@ public:
     
     bool listen(int num = 20);
     int accpet(sockaddr *addr, socklen_t *slen, int flages = 0);
-
+    SocketAddr get_SocketAddr() const;
 };
+
 }
 
 

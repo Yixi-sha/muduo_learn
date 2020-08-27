@@ -11,32 +11,29 @@
 namespace muduo{
 using namespace std;
 
-class AcceptFd : public SocketFd{
-public:
-    AcceptFd(int fd);
-};
+
 
 class Acceptor : public Noncopyable{
 private:
     shared_ptr<TcpServerFd>  tcpServer_;
-    function<void(AcceptFd)> acceptCallback_;
+    function<void(const int, const SocketAddr, const SocketAddr)> acceptCallback_;
     EventLoop *eventLoop_;
     shared_ptr<Channel> channel_;
     bool listening_;
 
     void handle_read();
-    Acceptor(string &hostnamen, string &server, EventLoop *eventLoop);
+    Acceptor(string &hostnamen, string &server, EventLoop *eventLoop, bool ipv4 = false);
     bool construct_two();
 public:
-    static Acceptor *construct_accpetor(string hostnamen, string server, EventLoop *eventLoop);
+    static Acceptor *construct_accpetor(string hostnamen, string server, EventLoop *eventLoop, bool ipv4 = false);
     ~Acceptor();
 
     bool is_listening() const{
         return listening_;
     }
     bool listen(int num = 20);
-    void set_new_connect_callback(function<void(AcceptFd)> cb );
-    
+    void set_new_connect_callback(function<void(const int, const SocketAddr, const SocketAddr)> cb );
+    SocketAddr get_SocketAddr() const;
 };
 
 

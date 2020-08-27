@@ -85,7 +85,7 @@ bool Poller::update_channel(Channel* channel){
             return false;
         }
         struct pollfd &pfd = pollfds_[idx];
-        if(pfd.fd != -1 || pfd.fd != channel->fd()){
+        if(pfd.fd != (-channel->fd() - 1) && pfd.fd != channel->fd()){
             LOG_ERROR << "Poller::update_channel pfd.fd != -1 || pfd.fd != channel->fd()" << endl;
             return false;
         }
@@ -93,9 +93,45 @@ bool Poller::update_channel(Channel* channel){
         pfd.revents = 0;
         pfd.fd = channel->fd();
         if(channel->is_none_event()){
-            pfd.fd = -1;
+            pfd.fd = -channel->fd() - 1;
         }
     }
+    return true;
+}
+
+bool Poller::remove_channel(Channel* channel){
+    if(!eventLoop_->is_in_loop_thread()){
+        LOG_ERROR << "Poller::remove_channel !eventLoop_->is_in_loop_thread())" << endl;
+        return false;
+    }
+    if(channels_.find(channel->fd()) == channels_.end()){
+        LOG_ERROR << "Poller::remove_channel channels_.find(channel->fd()) == channels_.end()" << endl;
+        return false;
+    }
+    if(!channel->is_none_event()){
+        LOG_ERROR << "Poller::remove_channel !channel->is_none_event()" << endl;
+        return false;
+    }
+    int idx = channel->index();
+    if(idx < 0 || idx >= pollfds_.size()){
+        LOG_ERROR << "Poller::remove_channel idx < 0 || idx >= pollfds_.size()" << endl;
+        return false;
+    }
+    const struct pollfd &pfd = pollfds_[idx];
+    if(pfd.fd != channel->fd() && pfd.fd != (-channel->fd() - 1)){
+        LOG_ERROR << "Poller::remove_channel pfd.fd  != channel->fd()" << endl; 
+        return false;
+    }
+    int n = channels_.erase(channel->fd());
+    if(idx != pollfds_.size() - 1){
+        int endfd = pollfds_.back().fd;
+        iter_swap(pollfds_.begin() + idx, pollfds_.end() - 1);
+        if(endfd < 0){
+            endfd = -endfd - 1;
+        }
+        channels_[endfd]->set_index(idx);
+    }
+    pollfds_.pop_back();
     return true;
 }
 

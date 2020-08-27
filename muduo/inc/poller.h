@@ -30,6 +30,7 @@ public:
     Timestamp poll(int timeOutMs, vector<Channel*> *activeChannels);
     bool update_channel(Channel *channel);
     bool is_in_loop_thread() const;
+    bool remove_channel(Channel* channel);
 };
 
 }

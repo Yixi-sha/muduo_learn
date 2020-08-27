@@ -14,7 +14,7 @@ protected:
     bool shutWrite_;
     bool ipv6_;
 public:
-    SocketFd(bool ipv6 = false);
+    SocketFd(int fd = -1, bool ipv6 = false);
     virtual ~SocketFd() = 0;
     
 

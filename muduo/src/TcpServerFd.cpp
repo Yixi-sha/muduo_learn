@@ -5,7 +5,7 @@
 
 namespace muduo{
 
-TcpServerFd::TcpServerFd(string &hostname, string &server, bool ipv6 = false): saddr_(0, ipv6){
+TcpServerFd::TcpServerFd(string &hostname, string &server, bool ipv6): saddr_(0, ipv6){
     addr_.reset(SocketAddrInfo::construct_SocketAddrInfo(hostname, server, ipv6, SOCK_STREAM));
     ipv6_ = ipv6;
 }
@@ -40,14 +40,13 @@ bool TcpServerFd::construct_two(){
         addr_->get_addr(reinterpret_cast<sockaddr*>(&in6), &slen);
         saddr_ = in6;
     }else{
-        cout << "ipv4" << endl;
+        
         sockaddr_in in;
         socklen_t slen = sizeof(in);
         addr_->get_addr(reinterpret_cast<sockaddr*>(&in), &slen);
         saddr_ = in;
     }
-    cout << saddr_.toString() << endl;
-    //memcpy(&saddr_, addr_->get_addr(), addr_->get_addrlen());
+    
     return true;
 }
 
@@ -83,6 +82,8 @@ int TcpServerFd::accpet(sockaddr *addr, socklen_t *slen, int flages){
         return Accept4(fd_, addr, slen, flages);
 }
 
-
+SocketAddr TcpServerFd::get_SocketAddr() const{
+    return saddr_;
+}
 
 }

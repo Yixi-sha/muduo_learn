@@ -11,11 +11,12 @@ const int Channel::kWriteEvent_ = POLLOUT;
 const int Channel::kErrorEvent_ = POLLERR;
 
 Channel::Channel(EventLoop *eventLoop, int fd)
-:eventLoop_(eventLoop), fd_(fd), events_(0), revents_(0),index_(-1){
+:eventLoop_(eventLoop), fd_(fd), events_(0), revents_(0),index_(-1), handling_(false){
     
 }
 Channel::~Channel(){
-
+    if(handling_)
+        LOG_ERROR << "Channel::~Channel()" << endl;
 }
 
 bool Channel::set_read_callback(const EventCallback& cb){
@@ -87,8 +88,13 @@ EventLoop* Channel::owner_loop() const{
 }
 
 void Channel::handle_event(){
+    handling_ = true;
     if(revents_ & POLLNVAL){
         LOG_WARN << "channel::handle_event() POLLNVAL";
+    }
+    if((revents_ & POLLHUP) && !(revents_ & POLLIN)){
+        if(closeCallback_)
+            closeCallback_();
     }
     if(revents_ & (POLLERR | POLLNVAL)){
         if(errorCallback_)
@@ -102,6 +108,7 @@ void Channel::handle_event(){
         if(writeCallback_)
             writeCallback_();
     }
+    handling_ = false;
 }
 
 bool Channel::is_none_event() const{

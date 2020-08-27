@@ -23,11 +23,14 @@ private:
     EventCallback readCallback_;
     EventCallback writeCallback_;
     EventCallback errorCallback_;
+    EventCallback closeCallback_;
 
     static const int kNoneEvent_;
     static const int kReadEvent_;
     static const int kWriteEvent_;
     static const int kErrorEvent_;
+
+    bool handling_;
 
     void update();
 public:

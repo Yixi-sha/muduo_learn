@@ -44,12 +44,10 @@ bool Timer::restart(Timestamp now){
 /**********************************TimerQueue**************************************/
 
 int createTimerfd(){
-    cout << "s createTimerfd"<< endl;
     int timerfd = ::timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK | TFD_CLOEXEC);
     if(timerfd < 0){
         LOG_ERROR << "Failed in timerfd_create" << endl;
     }
-    cout <<pthread_self() <<" timerfd  "<< timerfd  << endl;
     return timerfd;
 }
 

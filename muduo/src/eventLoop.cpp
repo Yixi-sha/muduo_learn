@@ -16,14 +16,12 @@ __thread EventLoop* loopInThisThread = nullptr;
 
 int createEventfd()
 {
-    cout << "s createEventfd"<< endl;
     int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     if (evtfd < 0){
         LOG_ERROR << "Failed in eventfd" << endl;
         return -1;
     }
     
-    cout <<pthread_self() << " evtfd  "<< evtfd << endl;
     return evtfd;
 }
 
@@ -184,6 +182,12 @@ void EventLoop::handle_read_wake(){
     }
 }
 
+bool EventLoop::remove_channel(Channel* channel){
+    if(!is_in_loop_thread()){
+        return false;
+    }
+    return poller_->remove_channel(channel);
+}
 
 
 }

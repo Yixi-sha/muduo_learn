@@ -7,11 +7,12 @@ extern "C"{
 
 
 namespace muduo{
-SocketFd::SocketFd(bool ipv6):fd_(-1), shutRead_(false), shutWrite_(false),
+SocketFd::SocketFd(int fd, bool ipv6):fd_(fd), shutRead_(false), shutWrite_(false),
 ipv6_(ipv6){
 }
 
 SocketFd::~SocketFd(){
+    cout << "SocketFd::~SocketFd()" << endl;
     close();
 }
 

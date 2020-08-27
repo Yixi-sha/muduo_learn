@@ -78,7 +78,7 @@ SocketAddr &SocketAddr::operator = (const struct sockaddr_in &addr4){
 }
 SocketAddr &SocketAddr::operator = (const struct sockaddr_in6 &addr6){
     addr6_ = addr6;
-    ipv6_ = false;
+    ipv6_ = true;
     return *this;
 }
 
@@ -97,7 +97,10 @@ SocketAddrInfo::SocketAddrInfo(string &hostname, string &server, bool ipv6, int 
     
 }
 bool SocketAddrInfo::construct_two(){
-    addrinfo_ = Host_serv(hostname_.c_str(), server_.c_str(), ipv6_ ? AF_INET6 : AF_INET, socktype_, AI_PASSIVE);
+    int flages = AI_CANONNAME | AI_PASSIVE;
+    if(ipv6_)
+        flages |= AI_V4MAPPED;
+    addrinfo_ = Host_serv(hostname_.c_str(), server_.c_str(), ipv6_ ? AF_INET6 : AF_INET, socktype_, flages);
     if(addrinfo_ == nullptr){
         LOG_ERROR << "Host_serv" << addrinfo_ << endl;
     }
