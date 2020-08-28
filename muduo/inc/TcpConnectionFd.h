@@ -5,6 +5,7 @@
 #include "socketFd.h"
 #include "eventLoop.h"
 #include "channel.h"
+#include "buffer.h"
 
 namespace muduo{
 class TcpConnectionFd : public SocketFd{
@@ -14,7 +15,7 @@ public:
         kConnected,
         KDisconnected,
     };  
-    using MessageCallback = function<void(const string ,const SocketAddr, const SocketAddr,  char*, int)>;
+    using MessageCallback = function<void(const string ,const SocketAddr, const SocketAddr,  Buffer *, Timestamp)>;
     using ConnectionCallback = function<void(const string , const SocketAddr, const SocketAddr, StateE)>;
     using CloseCallback = function<void(string)>;
     
@@ -31,14 +32,16 @@ private:
     MessageCallback messageCallback_;
     CloseCallback closeCallback_;
 
+    shared_ptr<Buffer> inputBuf_;
+
     bool construct_two();
 
     void set_state(StateE state);
     TcpConnectionFd(int fd, string &name, SocketAddr &local, SocketAddr &peer, EventLoop *eventLoop,bool ipv6);
-    void handle_read();
-    void handle_write();
-    void handle_close();
-    void handle_error();
+    void handle_read(Timestamp nowtime);
+    void handle_write(Timestamp nowtime);
+    void handle_close(Timestamp nowtime);
+    void handle_error(Timestamp nowtime);
 public:
     static TcpConnectionFd *construct_tcpConnectionFd(int fd, string &name, SocketAddr &local, SocketAddr &peer, EventLoop *eventLoop, bool ipv6 = false);
     ~TcpConnectionFd();

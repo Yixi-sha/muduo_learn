@@ -12,7 +12,6 @@ ipv6_(ipv6){
 }
 
 SocketFd::~SocketFd(){
-    cout << "SocketFd::~SocketFd()" << endl;
     close();
 }
 

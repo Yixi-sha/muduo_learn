@@ -5,13 +5,14 @@
 
 
 #include "noncopyable.h"
+#include "timestamp.h"
 
 namespace muduo{
 class EventLoop;
 
 class Channel : public Noncopyable{
 public:
-    typedef std::function<void()> EventCallback;
+    typedef std::function<void(Timestamp)> EventCallback;
 private:
     const int fd_;
     EventLoop *eventLoop_;
@@ -37,7 +38,7 @@ public:
     Channel(EventLoop *eventLoop, int fd);
     ~Channel();
 
-    void handle_event();
+    void handle_event(Timestamp time);
     bool set_read_callback(const EventCallback& cb);
     bool set_write_callback(const EventCallback& cb);
     bool set_error_callback(const EventCallback& cb);

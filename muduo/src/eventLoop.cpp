@@ -57,6 +57,7 @@ bool EventLoop::construct_two(){
         
    
     wakeChannel_->set_read_callback(bind(&EventLoop::handle_read_wake, this));
+    Channel::EventCallback back = bind(&EventLoop::handle_read_wake, this);
     wakeChannel_->enable_read();
     looping_ = false;
     return true;
@@ -95,9 +96,9 @@ bool EventLoop::loop(){
     
     while(!quit_){
         activeChannels_.clear();
-        poller_->poll(1000, &activeChannels_);
+        Timestamp retTime =  poller_->poll(1000, &activeChannels_);
         for(auto &activeChannel : activeChannels_){
-            activeChannel->handle_event();
+            activeChannel->handle_event(retTime);
         }
         do_pending_func();
     }

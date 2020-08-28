@@ -7,13 +7,13 @@ namespace muduo{
 
 TcpConnectionFd::TcpConnectionFd(int fd, string &name, SocketAddr &local, SocketAddr &peer, EventLoop *eventLoop, bool ipv6)
 :SocketFd(fd, ipv6),eventLoop_(eventLoop), name_(name), local_(local), peer_(peer),
-channel_(new Channel(eventLoop_, fd)), state_(kConnecting){
-    channel_->set_read_callback(bind(&TcpConnectionFd::handle_read, this));
+channel_(new Channel(eventLoop_, fd)), state_(kConnecting),inputBuf_(Buffer::construc_buffer()){
+    channel_->set_read_callback(bind(&TcpConnectionFd::handle_read, this, placeholders::_1));
 
 }
 
 bool TcpConnectionFd::construct_two(){
-    if(!channel_.get())
+    if(!channel_.get() || !inputBuf_.get())
         return false;
     return true;
 }
@@ -58,23 +58,24 @@ void TcpConnectionFd::set_state(StateE state){
     state_ = state;
 }
 
-void TcpConnectionFd::handle_read(){
+void TcpConnectionFd::handle_read(Timestamp nowtime){
     char buf[MAXLINE];
     int n = this->read(buf, MAXLINE);
+    //cout << nowtime.to_formatted_string() << endl;
     if(n > 0 && messageCallback_){
-        messageCallback_(name_, local_, peer_, buf, n);
+        //messageCallback_(name_, local_, peer_, buf, n);
     }else if(n == 0){
-        handle_close();
+        handle_close(nowtime);
     }else{
-        handle_error();
+        handle_error(nowtime);
     }
 }
 
-void TcpConnectionFd::handle_write(){
+void TcpConnectionFd::handle_write(Timestamp nowtime){
 
 }
 
-void TcpConnectionFd::handle_close(){
+void TcpConnectionFd::handle_close(Timestamp nowtime){
     if(!eventLoop_->is_in_loop_thread() || state_ != kConnected){
         LOG_ERROR << "TcpConnectionFd::handle_close()" << endl;
         return;
@@ -84,7 +85,7 @@ void TcpConnectionFd::handle_close(){
         closeCallback_(name_);
 }
 
-void TcpConnectionFd::handle_error(){
+void TcpConnectionFd::handle_error(Timestamp nowtime){
     LOG_ERROR << "TcpConnectionFd::handle_error()" << endl;
 }
 

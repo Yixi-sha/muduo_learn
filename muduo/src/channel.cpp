@@ -87,26 +87,26 @@ EventLoop* Channel::owner_loop() const{
     return eventLoop_;
 }
 
-void Channel::handle_event(){
+void Channel::handle_event(Timestamp time){
     handling_ = true;
     if(revents_ & POLLNVAL){
         LOG_WARN << "channel::handle_event() POLLNVAL";
     }
-    if((revents_ & POLLHUP) && !(revents_ & POLLIN)){
+        if((revents_ & POLLHUP) && !(revents_ & POLLIN)){
         if(closeCallback_)
-            closeCallback_();
+            closeCallback_(time);
     }
     if(revents_ & (POLLERR | POLLNVAL)){
         if(errorCallback_)
-            errorCallback_();
+            errorCallback_(time);
     }
     if(revents_ & (POLLIN | POLLPRI | POLLRDHUP)){
         if(readCallback_)
-            readCallback_();
+            readCallback_(time);
     }
     if(revents_ & POLLOUT){
         if(writeCallback_)
-            writeCallback_();
+            writeCallback_(time);
     }
     handling_ = false;
 }

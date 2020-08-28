@@ -20,7 +20,7 @@ bool Acceptor::construct_two(){
     
     if(channel_.get() == nullptr)
         return false;
-    channel_->set_read_callback(bind(&Acceptor::handle_read, this));
+    channel_->set_read_callback(bind(&Acceptor::handle_read, this, placeholders::_1));
     tcpServer_->set_noblock(true);
     tcpServer_->set_cloexec(true);
     return true;
@@ -52,7 +52,7 @@ bool Acceptor::listen(int num){
 void Acceptor::set_new_connect_callback(function<void(const int, const SocketAddr, const SocketAddr)> cb){
     acceptCallback_ = cb;
 }
-void Acceptor::handle_read(){
+void Acceptor::handle_read(Timestamp time){
     sockaddr_in addr4;
     sockaddr_in6 addr6;
     socklen_t slen;
@@ -72,6 +72,7 @@ void Acceptor::handle_read(){
         poll.revents = 0;
         int ret = ::poll(&poll, 1, 0);
         if((poll.revents & POLLOUT) && acceptCallback_){
+            LOG_TRACE << "connection arrive in " << time.to_formatted_string() << endl;
             if(tcpServer_->is_ipv6()){
                 acceptCallback_(fd, tcpServer_->get_SocketAddr(), addr6);
             }else{
