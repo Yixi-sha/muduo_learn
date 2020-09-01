@@ -1,12 +1,13 @@
 #include "../inc/buffer.h"
 #include "../inc/log.h"
-
-namespace muduo{
+#include "../inc/wrap_func.h"
 
 extern "C"{
 #include <strings.h>
+#include <sys/uio.h>
 }
 
+namespace muduo{
 
 Buffer::Buffer(int capacity, int readerIndex, int writerIndex) 
 : capacity_(capacity), readerIndex_(readerIndex), writerIndex_(writerIndex){
@@ -58,7 +59,7 @@ const char *Buffer::peek() const{
 }
 
 bool Buffer::retrieve(int len){
-    if((readerIndex_ + len) > readable_bytes()){
+    if(len > readable_bytes()){
         LOG_ERROR << "Buffer::retrieve(int len)" << endl;
         return false;
     }
@@ -82,14 +83,14 @@ void Buffer::retrieve_all(){
     writerIndex_ = kCheapPrepend;
 }
 
-string Buffer::retrieveAsString(){
+string Buffer::retrieve_as_String(){
     string ret(peek(), readable_bytes());
     retrieve_all();
     return ret;
 }
 
 void Buffer::reset(){
-    if(readerIndex_ != kCheapPrepend){
+    if(readerIndex_ > kCheapPrepend){
         int dateNum = readable_bytes();
         char *last = buf_ + readerIndex_ + dateNum;
         char *d = buf_ + kCheapPrepend, *s = buf_ + readerIndex_;
@@ -104,7 +105,6 @@ void Buffer::reset(){
 }
 
 bool Buffer::chang_size(int capacity){
-    cout << capacity_ << endl;
     if(capacity <= capacity_){
         reset();
         return true;
@@ -113,6 +113,10 @@ bool Buffer::chang_size(int capacity){
         if(!tmpbuf)
             return false;
         int dateNum = readable_bytes();
+        if(capacity < (dateNum + kCheapPrepend)){
+            delete tmpbuf;
+            return false;
+        }
         ::copy(buf_ + readerIndex_, buf_ + readerIndex_ + dateNum, tmpbuf + kCheapPrepend);
         readerIndex_ = kCheapPrepend;
         writerIndex_ = kCheapPrepend + dateNum;
@@ -124,11 +128,14 @@ bool Buffer::chang_size(int capacity){
 }
 
 bool Buffer::append(const char *data, size_t len){
-    int newCapacity = readable_bytes() + len;
-    bool ret = chang_size(newCapacity + kCheapPrepend);
-    cout << "append " <<capacity_ << endl;
-    if(!ret)
-        return false;
+    if(writable_bytes() < len){
+        int newCapacity = capacity_ + (len - writable_bytes()) * 2;
+        bool ret = chang_size(newCapacity + kCheapPrepend);
+        if(!ret)
+            return false;
+    }else{
+        reset();
+    }
     ::copy(data, data + len, buf_ + writerIndex_);
     writerIndex_ += len;
     return true;
@@ -140,6 +147,79 @@ bool Buffer::append(const string& str){
 
 bool Buffer::append(const void *data, size_t len){
     return append(reinterpret_cast<const char*>(data), len);
+}
+
+bool Buffer::ensure_writableBytes(int len){
+    if(writable_bytes() < len){
+        return chang_size(len + capacity_ + kCheapPrepend);
+    }
+    return true;
+}
+
+char* Buffer::begin_write(){
+    return buf_ + writerIndex_;
+}
+
+const char* Buffer::begin_write() const{
+    return buf_ + writerIndex_;
+}
+
+bool Buffer::has_written(size_t len){
+    if(len + writerIndex_ <= capacity_){
+        len += writerIndex_;
+        return true;
+    }
+    return false;
+}
+
+bool Buffer::prepend(const void *data, size_t len){
+    if(readerIndex_ - len < 0)
+        return false;
+    readerIndex_ -= len;
+    const char* d = reinterpret_cast<const char*>(data);
+    ::copy(d, d + len, buf_ + readerIndex_);
+    return true;
+}
+
+bool Buffer::shrink(size_t reserve){
+    int nowDataNum = readable_bytes();
+    char *newBuf = new char[kCheapPrepend + nowDataNum + reserve];
+    if(!newBuf)
+        return false;
+
+    ::copy(buf_ + readerIndex_, buf_ + readerIndex_ + nowDataNum, newBuf + kCheapPrepend);
+    ::swap(buf_, newBuf);
+    readerIndex_ = kCheapPrepend;
+    writerIndex_ = readerIndex_ + nowDataNum;
+    capacity_ = kCheapPrepend + nowDataNum + reserve;
+    delete newBuf;
+    return true;
+}
+
+int Buffer::read_fd(int fd, int* savedErron){
+    char data[65535];
+    struct iovec vec[2];
+    const int writeAble = writable_bytes();
+
+    vec[0].iov_base = buf_ + writerIndex_;
+    vec[0].iov_len = writeAble;
+    vec[1].iov_base = data;
+    vec[1].iov_len = sizeof(data);
+
+    int ret = ::readv(fd, vec, 2);
+    if(ret < 0){
+        LOG_ERROR << "Buffer::read_fd" << endl;
+        *savedErron = errno;
+    }else if(ret <= writeAble){
+        writerIndex_ += ret;
+    }else{
+        writerIndex_ = capacity_;
+        if(!append(data, ret - writeAble)){
+            LOG_ERROR << "Buffer::read_fd !append(data, ret - writeAble)" << endl;
+            return writeAble;
+        }
+    }
+    return ret;
 }
 
 }

@@ -13,9 +13,10 @@ public:
     enum StateE{
         kConnecting = 0,
         kConnected,
+        KDisconnecting,
         KDisconnected,
     };  
-    using MessageCallback = function<void(const string ,const SocketAddr, const SocketAddr,  Buffer *, Timestamp)>;
+    using MessageCallback = function<void(const string ,const SocketAddr, const SocketAddr,  shared_ptr<Buffer>, Timestamp)>;
     using ConnectionCallback = function<void(const string , const SocketAddr, const SocketAddr, StateE)>;
     using CloseCallback = function<void(string)>;
     
@@ -33,6 +34,7 @@ private:
     CloseCallback closeCallback_;
 
     shared_ptr<Buffer> inputBuf_;
+    shared_ptr<Buffer> outputBuf_;
 
     bool construct_two();
 
@@ -42,6 +44,8 @@ private:
     void handle_write(Timestamp nowtime);
     void handle_close(Timestamp nowtime);
     void handle_error(Timestamp nowtime);
+    void send_in_loop(string buf);
+    void shutdown_in_loop();
 public:
     static TcpConnectionFd *construct_tcpConnectionFd(int fd, string &name, SocketAddr &local, SocketAddr &peer, EventLoop *eventLoop, bool ipv6 = false);
     ~TcpConnectionFd();
@@ -52,6 +56,12 @@ public:
     void set_messageCallback(MessageCallback cb);
     void set_closeCallback(CloseCallback cb);
     void connect_destroyed();
+
+    bool send(const void* buf, int len);
+    bool send(string buf);
+ 
+    bool set_shutdown();
+
 };
 }
 

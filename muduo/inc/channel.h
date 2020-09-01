@@ -55,6 +55,7 @@ public:
     void disable_write();
     bool enable_all();
     void disable_all();
+    bool is_writing() const;
     
     int index() const;
     bool set_index(int index);

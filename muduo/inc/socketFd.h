@@ -29,7 +29,7 @@ public:
     bool is_cloexec();
 
     int read(char *buf, int len);
-    int write(char *buf, int len);
+    int write(const char *buf, int len);
 
     bool close();
     bool shutdown(int how);

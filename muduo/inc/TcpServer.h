@@ -38,6 +38,7 @@ public:
     bool is_start();
     void start();
     string name() const;
+    shared_ptr<TcpConnectionFd> get_tcpConnectionFd(const string &name);
 };
 }
 

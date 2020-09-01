@@ -31,10 +31,17 @@ public:
     bool retrieve(int len);
     bool retrieve_until(const char* end);
     void retrieve_all();
-    string retrieveAsString();
+    string retrieve_as_String();
     bool append(const char *data, size_t len);
     bool append(const string& str);
     bool append(const void *data, size_t len);
+    bool ensure_writableBytes(int len);
+    char* begin_write();
+    const char* begin_write() const;
+    bool has_written(size_t len);
+    bool prepend(const void*data, size_t len);
+    bool shrink(size_t reserve);
+    int read_fd(int fd, int* savedErron);
 };
 }
 

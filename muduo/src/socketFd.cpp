@@ -82,7 +82,7 @@ int SocketFd::read(char *buf, int len){
     return Read(fd_, buf, len);
 
 }
-int SocketFd::write(char *buf, int len){
+int SocketFd::write(const char *buf, int len){
     if(fd_ == -1){
         return -1;
     }

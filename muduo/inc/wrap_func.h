@@ -87,7 +87,7 @@ int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int Inet_pton(int af, const char *src, void *dst);
 char *Sock_ntop(const struct sockaddr *sockaddrIn, socklen_t len);
 ssize_t Read(int fd, void *buf, size_t count);
-ssize_t Write(int fd, void *buf, size_t count);
+ssize_t Write(int fd,const void *buf, size_t count);
 size_t Readn(int fd, void *ptr, size_t len);
 size_t Writen(int fd,const void *vptr, size_t len);
 static size_t my_read(int fd, char *vptr);

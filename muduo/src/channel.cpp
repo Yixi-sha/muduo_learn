@@ -128,5 +128,8 @@ int Channel::events() const{
     return events_;
 }
 
+bool Channel::is_writing() const{
+    return events_ & kWriteEvent_;
+}
 
 }

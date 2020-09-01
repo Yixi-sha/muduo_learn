@@ -92,4 +92,8 @@ void TcpServer::remove_connection(string name){
     eventLoop_->queue_in_loop(bind(&TcpConnectionFd::connect_destroyed, tcpConnectionFdPtr));
 }
 
+shared_ptr<TcpConnectionFd> TcpServer::get_tcpConnectionFd(const string &name){
+    return connections_[name];
+}
+
 }

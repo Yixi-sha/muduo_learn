@@ -167,7 +167,7 @@ ssize_t Read(int fd, void *buf, size_t count){
     return ret;
 }
 
-ssize_t Write(int fd, void *buf, size_t count){
+ssize_t Write(int fd,const void *buf, size_t count){
     ssize_t ret = 0;
     while(1){
         if( (ret = write(fd, buf, count)) < 0){
