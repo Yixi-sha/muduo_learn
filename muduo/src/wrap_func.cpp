@@ -291,8 +291,11 @@ Signal_func* Signal(int signalNum, Signal_func* signal_func){
     }
 
 
-    if(sigaction(signalNum, &newAtion, &oldAction) < 0)
-        err("sigaction");
+    if(sigaction(signalNum, &newAtion, &oldAction) < 0){
+        LOG_ERROR <<  "sigaction" << endl;
+        return nullptr;
+    }
+        
     
     //printf("signal end\n");
     return oldAction.sa_handler;

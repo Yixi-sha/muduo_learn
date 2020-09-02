@@ -45,6 +45,14 @@ void TcpConnectionFd::set_closeCallback(CloseCallback cb){
     closeCallback_ = cb;
 }
 
+void TcpConnectionFd::set_writeCompleteCallback(WriteCompleteCallback cb){
+    writeCompleteCallback_ = cb;
+}
+
+void TcpConnectionFd::set_higWaterMarkCallback(HigWaterMarkCallback cb){
+    higWaterMarkCallback_ = cb;
+}
+
 void TcpConnectionFd::connection_established(){
     if(!eventLoop_->is_in_loop_thread() || state_ != kConnecting){
         LOG_ERROR << "TcpConnectionFd::connection_established()" << endl;
@@ -78,6 +86,8 @@ void TcpConnectionFd::handle_write(Timestamp nowtime){
         if(n > 0){
             outputBuf_->retrieve(n);
             if(outputBuf_->readable_bytes() == 0){
+                if(writeCompleteCallback_)
+                    writeCompleteCallback_(name_, local_, peer_);
                 channel_->disable_write();
                 if(state_ == KDisconnecting){
                     shutdown_in_loop();
@@ -137,6 +147,10 @@ void TcpConnectionFd::send_in_loop(string buf){
         if(nowWrited > 0){
             if(nowWrited < buf.size())
                 LOG_TRACE  << "write countinue " << endl;
+            else if(nowWrited == buf.size()){
+                if(writeCompleteCallback_)
+                   writeCompleteCallback_(name_, local_, peer_); 
+            }
         }else{
             nowWrited = 0;
             if(errno != EWOULDBLOCK){
@@ -150,7 +164,11 @@ void TcpConnectionFd::send_in_loop(string buf){
         if(!channel_->is_writing()){
             channel_->enable_write();
         }
+        if(outputBuf_->readable_bytes() >= 665535 && higWaterMarkCallback_){
+            higWaterMarkCallback_(name_, local_, peer_, outputBuf_->readable_bytes());
+        }
     }
+
 }
 
 bool TcpConnectionFd::set_shutdown(){
@@ -167,6 +185,33 @@ void TcpConnectionFd::shutdown_in_loop(){
     if(!channel_->is_writing()){
         this->shutdown(SHUT_WR);
     }
+}
+
+bool TcpConnectionFd::set_tcp_noDelay(bool on){
+    int opt = on ? 1 : 0;
+    return ::setsockopt(this->get_fd(), IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) == 0;
+}
+
+bool TcpConnectionFd::set_tcp_keepAlive(bool on, int keppIdle, int keepInterval, int keepCount){
+    int opt = on ? 1 : 0;
+    bool ret = ::setsockopt(this->get_fd(), SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt)) == 0;
+    if(!on || !ret)
+        return ret;
+
+    ret = ::setsockopt(this->get_fd(), SOL_TCP, TCP_KEEPIDLE, &keppIdle, sizeof(keppIdle)) == 0;
+    if(!ret)
+        return ret;
+    ret = ::setsockopt(this->get_fd(), SOL_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(keepInterval)) == 0;
+    if(!ret)
+        return ret;
+    ret = ::setsockopt(this->get_fd(), SOL_TCP, TCP_KEEPCNT, &keepCount, sizeof(keepCount)) == 0;
+
+    return ret;
+    
+}
+
+EventLoop *TcpConnectionFd::get_loop(){
+    return eventLoop_;
 }
 
 }

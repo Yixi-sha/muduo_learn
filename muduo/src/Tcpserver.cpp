@@ -8,7 +8,7 @@ extern "C"{
 
 TcpServer::TcpServer(string &hostname, string &server, EventLoop* eventLoop, bool ipv6)
 :eventLoop_(eventLoop), acceptor_(Acceptor::construct_accpetor(hostname, server, eventLoop, ipv6)),
-nextConnId_(0), ipv6_(ipv6), started_(false){
+nextConnId_(0), ipv6_(ipv6), started_(false), threadsNum_(0), threadPool_(new EventLoopThreadPool(eventLoop, 0)){
     
 }
 
@@ -48,13 +48,17 @@ void TcpServer::acceptor_callback(int fd, SocketAddr local, SocketAddr peer){
     char buf[32];
     snprintf(buf, sizeof(buf), "%d", nextConnId_);
     string connName = name_ + buf;
-    shared_ptr<TcpConnectionFd> TcpConnectionFdptr(TcpConnectionFd::construct_tcpConnectionFd(fd, connName, local, peer, eventLoop_, ipv6_));
+    EventLoop *localLoop = threadPool_->get_next();
+    if(localLoop == nullptr){
+        err("TcpServer::acceptor_callback");
+    }
+    shared_ptr<TcpConnectionFd> TcpConnectionFdptr(TcpConnectionFd::construct_tcpConnectionFd(fd, connName, local, peer, localLoop, ipv6_));
     if(TcpConnectionFdptr.get()){
         connections_[connName] = TcpConnectionFdptr;
         TcpConnectionFdptr->set_newConnectionCallback(connectionCallback_);
         TcpConnectionFdptr->set_messageCallback(messageCallback_);
         TcpConnectionFdptr->set_closeCallback(bind(&TcpServer::remove_connection, this, placeholders::_1));
-        TcpConnectionFdptr->connection_established();
+        localLoop->run_in_loop(bind(&TcpConnectionFd::connection_established, TcpConnectionFdptr));
         ++nextConnId_;
     }else{
         LOG_ERROR << "TcpServer::acceptor_callback" <<endl;
@@ -80,20 +84,32 @@ void TcpServer::start(){
     if(!acceptor_->is_listening()){
         eventLoop_->run_in_loop(bind(&Acceptor::listen, acceptor_.get(), 20));
     }
+    threadPool_->set_thread_num(threadsNum_);
+    threadPool_->start();
 }
 
 void TcpServer::remove_connection(string name){
+    eventLoop_->run_in_loop(bind(&TcpServer::remove_connection_in_loop, this, name));
+}
+
+void TcpServer::remove_connection_in_loop(string name){
     if(!eventLoop_->is_in_loop_thread()){
         LOG_ERROR << "TcpServer::remove_connection" << endl;
         return;
     }
     shared_ptr<TcpConnectionFd> tcpConnectionFdPtr = connections_[name];
     connections_.erase(name);
-    eventLoop_->queue_in_loop(bind(&TcpConnectionFd::connect_destroyed, tcpConnectionFdPtr));
+    tcpConnectionFdPtr->get_loop()->queue_in_loop(bind(&TcpConnectionFd::connect_destroyed, tcpConnectionFdPtr));
 }
 
 shared_ptr<TcpConnectionFd> TcpServer::get_tcpConnectionFd(const string &name){
     return connections_[name];
 }
+
+void TcpServer::set_threadsNum(int num){
+    threadsNum_ = num;
+}
+
+
 
 }

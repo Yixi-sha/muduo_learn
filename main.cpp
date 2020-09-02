@@ -36,13 +36,14 @@ EventLoop *g_loop;
 TcpServer *g_tcpServer;
 void connection_state(const string name, const SocketAddr, const SocketAddr, TcpConnectionFd::StateE state){
     cout << "connection_state " << state <<endl;
-    
+    cout << pthread_self() << endl;
 }
 
 void messg(const string name,const SocketAddr, const SocketAddr,  shared_ptr<Buffer> buffer, Timestamp time){
     string info(buffer->retrieve_as_String());
     cout <<time.to_formatted_string() << " " << info << endl;
     g_tcpServer->get_tcpConnectionFd(name)->send(time.to_formatted_string() + info);
+    cout << pthread_self() << endl;
 }
 
 
@@ -53,8 +54,10 @@ int main(){
     shared_ptr<TcpServer> tcpServer(TcpServer::construct_TcpServer("ubuntu", "8888", loop.get(), true));
     tcpServer->set_newConnectionCallback(connection_state);
     tcpServer->set_messageCallback(messg);
+    tcpServer->set_threadsNum(5);
     tcpServer->start();
     g_tcpServer = tcpServer.get();
+    cout <<"main " << pthread_self() << endl;
     loop->loop();
     cout << "yixi-test end" << endl;
     return 0;

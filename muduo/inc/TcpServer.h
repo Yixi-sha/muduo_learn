@@ -8,6 +8,7 @@
 #include "eventLoop.h"
 #include "acceptor.h"
 #include "TcpConnectionFd.h"
+#include "eventLoopThreadPool.h"
 
 namespace muduo{
 
@@ -25,10 +26,16 @@ private:
     int nextConnId_;
     bool started_;
     bool ipv6_;
+
+    int threadsNum_;
+    shared_ptr<EventLoopThreadPool> threadPool_;
+
     TcpServer(string &hostname, string &server, EventLoop* eventLoop, bool ipv6 = false);
     bool construct_two();
     void acceptor_callback(int fd, SocketAddr local, SocketAddr peer);
     void remove_connection(string name);
+    
+    void remove_connection_in_loop(string name); 
 public:
     static TcpServer* construct_TcpServer(string hostname, string server, EventLoop* eventLoop, bool ipv6 = false);
     ~TcpServer();
@@ -39,6 +46,8 @@ public:
     void start();
     string name() const;
     shared_ptr<TcpConnectionFd> get_tcpConnectionFd(const string &name);
+
+    void set_threadsNum(int num);
 };
 }
 

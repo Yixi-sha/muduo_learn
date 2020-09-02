@@ -19,7 +19,9 @@ public:
     using MessageCallback = function<void(const string ,const SocketAddr, const SocketAddr,  shared_ptr<Buffer>, Timestamp)>;
     using ConnectionCallback = function<void(const string , const SocketAddr, const SocketAddr, StateE)>;
     using CloseCallback = function<void(string)>;
-    
+    using WriteCompleteCallback = function<void(const string ,const SocketAddr, const SocketAddr)>;
+    using HigWaterMarkCallback = function<void(const string ,const SocketAddr, const SocketAddr, int)>;
+
 private:
     EventLoop *eventLoop_;
     string name_;
@@ -32,6 +34,8 @@ private:
     ConnectionCallback connectionCallback_;
     MessageCallback messageCallback_;
     CloseCallback closeCallback_;
+    WriteCompleteCallback writeCompleteCallback_;
+    HigWaterMarkCallback higWaterMarkCallback_;
 
     shared_ptr<Buffer> inputBuf_;
     shared_ptr<Buffer> outputBuf_;
@@ -55,13 +59,17 @@ public:
     void set_newConnectionCallback(ConnectionCallback cb);
     void set_messageCallback(MessageCallback cb);
     void set_closeCallback(CloseCallback cb);
+    void set_writeCompleteCallback(WriteCompleteCallback cb);
+    void set_higWaterMarkCallback(HigWaterMarkCallback cb);
     void connect_destroyed();
 
     bool send(const void* buf, int len);
     bool send(string buf);
  
     bool set_shutdown();
-
+    bool set_tcp_noDelay(bool on);
+    bool set_tcp_keepAlive(bool on, int keppIdle = 60, int keepInterval = 5, int keepCount = 3);
+    EventLoop *get_loop();
 };
 }
 

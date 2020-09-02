@@ -32,6 +32,7 @@ extern "C"{
 #include <sys/param.h>
 #include <linux/in.h>
 #include <pthread.h>
+# include <netinet/tcp.h>
 }
 
 namespace muduo{
