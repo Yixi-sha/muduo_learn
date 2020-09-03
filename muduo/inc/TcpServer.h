@@ -14,7 +14,7 @@ namespace muduo{
 
 using namespace std;
 
-class TcpServer{
+class TcpServer : public Noncopyable{
 private:
     EventLoop* eventLoop_;
     shared_ptr<Acceptor> acceptor_;

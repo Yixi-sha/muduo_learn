@@ -13,10 +13,10 @@ namespace muduo{
 using namespace std;
 class Timer : public Noncopyable{
 private:
-function<void()> timeCallback_;
-Timestamp expire_;
-const double interval_;
-const bool repeat_;
+    function<void()> timeCallback_;
+    Timestamp expire_;
+    const double interval_;
+    bool repeat_;
 public:
     Timer(const function<void()> &cb, Timestamp when, double interval);
     ~Timer(){
@@ -26,6 +26,7 @@ public:
     void run() const;
     Timestamp expire() const;
     bool repeat() const;
+    void set_repeat(bool on);
     bool restart(Timestamp now);
 
 };
@@ -34,8 +35,12 @@ class TimerId : Object{
 private:
     Timer* value_;
 public:
-    explicit TimerId(Timer* timer): value_(timer){
+    explicit TimerId(Timer* timer = nullptr): value_(timer){
     }
+    
+    Timer* get_value(){
+        return value_;
+    }    
 };
 
 class EventLoop;
@@ -55,12 +60,13 @@ private:
     bool add_timer_in_loop(Timer *timer);
     bool construct_two();
     TimerQueue(EventLoop *eventLoop);
+    void cancel_in_loop(TimerId timerId);
 public:
     static TimerQueue* construct_timerQueue(EventLoop *eventLoop);
     ~TimerQueue();
 
     TimerId add_timer(const function<void()> cb, Timestamp when, double interval);
-    //void cancel(TimerId timerId);
+    void cancel(TimerId timerId);
 };
 }
 

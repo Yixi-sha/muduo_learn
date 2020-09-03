@@ -39,7 +39,9 @@ bool Timer::restart(Timestamp now){
         return false;
     }
 }
-
+void Timer::set_repeat(bool on){
+    repeat_ = on;
+}
 
 /**********************************TimerQueue**************************************/
 
@@ -118,6 +120,12 @@ vector<pair<Timestamp, Timer*>> TimerQueue::get_expired(Timestamp now){
     vector<pair<Timestamp, Timer*>> ret;
     pair<Timestamp, Timer*> sentry = make_pair(now, reinterpret_cast<Timer*>(UINTPTR_MAX));
     set<pair<Timestamp, Timer*>>::iterator it = timers_.lower_bound(sentry);
+    if(it == timers_.end()){
+        set<pair<Timestamp, Timer*>>::iterator interIt = timers_.begin();
+        if(it->first > now){
+            return ret;
+        }
+    }
     if(it != timers_.end() && now > it->first){
         err("TimerQueue::get_expired it != timers_.end() && now > it->first");
     }
@@ -194,5 +202,24 @@ TimerId TimerQueue::add_timer(const function<void()> cb, Timestamp when, double 
     return TimerId(timer);
 }
 
-// void cancel(TimerId timerId);
+void TimerQueue::cancel_in_loop(TimerId timerId){
+    if(timerId.get_value() == nullptr)
+        return;
+    set<pair<Timestamp, Timer*>>::iterator it = timers_.begin();
+    while(it != timers_.end()){
+        if(it->second == timerId.get_value())
+            break;
+        ++it;
+    }
+    if(it != timers_.end() && it->second){
+        Timer *timer= it->second;
+        timers_.erase(it);
+        delete timer;
+    }
+}
+
+void TimerQueue::cancel(TimerId timerId){
+    eventLoop_->run_in_loop(bind(&TimerQueue::cancel_in_loop, this, timerId));
+}
+
 }

@@ -413,9 +413,12 @@ int Tcp_connect(const char *hostname, const char *service, int family){
         
     }else
         addrinfoRet = Host_serv(hostname, service, family, SOCK_STREAM, AI_CANONNAME);
+    
     if(addrinfoRet == NULL){
-        err("host_serv error\n");
+        LOG_ERROR <<  "host_serv error" << endl;
+        return -1;
     }
+
     addrinfoHead = addrinfoRet;
     
     while(addrinfoRet){
@@ -423,7 +426,7 @@ int Tcp_connect(const char *hostname, const char *service, int family){
         
         if(socketFd < 0)
             continue;
-        if(Connect(socketFd, addrinfoRet->ai_addr, addrinfoRet->ai_addrlen) == 0)
+        if(connect(socketFd, addrinfoRet->ai_addr, addrinfoRet->ai_addrlen) == 0)
             break;
         
         close(socketFd);
@@ -1079,4 +1082,44 @@ size_t Readline_r(int fd,void *vptr, size_t maxLen){
     *ptr = 0;
     return ret;
 }
+
+int Get_socket_error(int sockfd){
+  int optval;
+  socklen_t optlen = sizeof(optval);
+
+  if(getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0){
+    return errno;
+  }
+  else{
+    return optval;
+  }
+}
+
+struct sockaddr_in Get_localAddr(int sockfd){
+  struct sockaddr_in localaddr;
+  bzero(&localaddr, sizeof(localaddr));
+  socklen_t addrlen = sizeof(localaddr);
+  if(getsockname(sockfd, reinterpret_cast<struct sockaddr*>(&localaddr), &addrlen) < 0){
+    LOG_ERROR << "sockets::getLocalAddr";
+  }
+  return localaddr;
+}
+
+struct sockaddr_in Get_peerAddr(int sockfd){
+  struct sockaddr_in peeraddr;
+  bzero(&peeraddr, sizeof(peeraddr));
+  socklen_t addrlen = sizeof(peeraddr);
+  if (getpeername(sockfd, reinterpret_cast<struct sockaddr*>(&peeraddr), &addrlen) < 0){
+    LOG_ERROR << "sockets::getPeerAddr";
+  }
+  return peeraddr;
+}
+
+bool Is_selfConnect(int sockfd){
+  struct sockaddr_in localaddr = Get_localAddr(sockfd);
+  struct sockaddr_in peeraddr = Get_peerAddr(sockfd);
+  return localaddr.sin_port == peeraddr.sin_port && localaddr.sin_addr.s_addr == peeraddr.sin_addr.s_addr;
+}
+
+
 }

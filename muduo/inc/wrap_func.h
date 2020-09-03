@@ -132,5 +132,9 @@ int Pthread_key_create(pthread_key_t *keyptr, void (*destructor)(void*));
 int Pthread_once(pthread_once_t *onceptr, void (*init)(void));
 static size_t My_read_r(Rline *rline,int fd, char *vptr);
 size_t Readline_r(int fd,void *vptr, size_t maxLen);
+int Get_socket_error(int sockfd);
+struct sockaddr_in Get_localAddr(int sockfd);
+struct sockaddr_in Get_peerAddr(int sockfd);
+bool Is_selfConnect(int sockfd);
 }
 #endif

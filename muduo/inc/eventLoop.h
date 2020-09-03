@@ -61,6 +61,10 @@ public:
     static EventLoop* get_event_loop_of_current_thread();
     void run_in_loop(const function<void()> cb);
     bool remove_channel(Channel* channel);
+
+    void cancel_timer(TimerId timerid){
+        timerQueue_->cancel(timerid);
+    }
 };
 
 }
