@@ -70,6 +70,8 @@ public:
     bool set_tcp_noDelay(bool on);
     bool set_tcp_keepAlive(bool on, int keppIdle = 60, int keepInterval = 5, int keepCount = 3);
     EventLoop *get_loop();
+
+    string get_name() const;
 };
 }
 

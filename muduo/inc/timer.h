@@ -31,27 +31,35 @@ public:
 
 };
 
+class EventLoop;
+
 class TimerId : Object{
 private:
     Timer* value_;
+
 public:
     explicit TimerId(Timer* timer = nullptr): value_(timer){
-    }
-    
+    }  
+
     Timer* get_value(){
         return value_;
-    }    
+    }
+
 };
 
-class EventLoop;
-
-
 class TimerQueue : public Noncopyable{
+public:
+
+
 private:
     EventLoop *eventLoop_;
     const int timerFd_;
     Channel channel_;
     set<pair<Timestamp, Timer*>> timers_;
+
+    set<Timer*> willDelet_;
+
+    bool callbacking_;
 
     void handle_read();
     vector<pair<Timestamp, Timer*>> get_expired(Timestamp now);

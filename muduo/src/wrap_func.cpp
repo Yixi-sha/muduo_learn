@@ -1095,7 +1095,7 @@ int Get_socket_error(int sockfd){
   }
 }
 
-struct sockaddr_in Get_localAddr(int sockfd){
+struct sockaddr_in Get_localAddr_4(int sockfd){
   struct sockaddr_in localaddr;
   bzero(&localaddr, sizeof(localaddr));
   socklen_t addrlen = sizeof(localaddr);
@@ -1105,7 +1105,7 @@ struct sockaddr_in Get_localAddr(int sockfd){
   return localaddr;
 }
 
-struct sockaddr_in Get_peerAddr(int sockfd){
+struct sockaddr_in Get_peerAddr_4(int sockfd){
   struct sockaddr_in peeraddr;
   bzero(&peeraddr, sizeof(peeraddr));
   socklen_t addrlen = sizeof(peeraddr);
@@ -1115,11 +1115,24 @@ struct sockaddr_in Get_peerAddr(int sockfd){
   return peeraddr;
 }
 
-bool Is_selfConnect(int sockfd){
-  struct sockaddr_in localaddr = Get_localAddr(sockfd);
-  struct sockaddr_in peeraddr = Get_peerAddr(sockfd);
-  return localaddr.sin_port == peeraddr.sin_port && localaddr.sin_addr.s_addr == peeraddr.sin_addr.s_addr;
+struct sockaddr_in6 Get_localAddr_6(int sockfd){
+  struct sockaddr_in6 localaddr;
+  bzero(&localaddr, sizeof(localaddr));
+  socklen_t addrlen = sizeof(localaddr);
+  if(getsockname(sockfd, reinterpret_cast<struct sockaddr*>(&localaddr), &addrlen) < 0){
+    LOG_ERROR << "sockets::getLocalAddr";
+  }
+  return localaddr;
 }
 
+struct sockaddr_in6 Get_peerAddr_6(int sockfd){
+  struct sockaddr_in6 peeraddr;
+  bzero(&peeraddr, sizeof(peeraddr));
+  socklen_t addrlen = sizeof(peeraddr);
+  if (getpeername(sockfd, reinterpret_cast<struct sockaddr*>(&peeraddr), &addrlen) < 0){
+    LOG_ERROR << "sockets::getPeerAddr";
+  }
+  return peeraddr;
+}
 
 }

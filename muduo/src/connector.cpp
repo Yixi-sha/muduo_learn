@@ -29,7 +29,13 @@ Connector* Connector::construct_connector(string hostname, string server, EventL
 }
 
 Connector::~Connector(){
-
+    if(timerId_.get_value()){
+        eventLoop_->cancel_timer(timerId_);
+    }
+    if(channel_.get()){
+        int fd = remove_and_reset_channel();
+        close(fd);
+    }
 }
 
 void Connector::set_newConnectionCallback(NewConnectionCallback cb){
@@ -58,6 +64,7 @@ void Connector::connect(){
         LOG_ERROR << "Connector::connect()" << endl;
         return;
     }
+    
     int ret = ::connect(socketfd, addr_->get_addr(), addr_->get_addrlen());
     int saveErrno = (ret == 0) ? 0 : errno;
 
@@ -74,6 +81,7 @@ void Connector::connect(){
         case EADDRNOTAVAIL:
         case ECONNREFUSED:
         case ENETUNREACH:
+            LOG_ERROR << "Connector::connect() " << strerror(saveErrno) << endl;
             retry(socketfd);
             break;
         
@@ -134,6 +142,10 @@ void Connector::restart(){
 }
 
 void Connector::stop(){
+    if(!eventLoop_->is_in_loop_thread()){
+        LOG_ERROR << "Connector::stop() " << endl;
+        return;
+    }
     connect_ = false;
     if(timerId_.get_value()){
         eventLoop_->cancel_timer(timerId_);
@@ -145,16 +157,18 @@ int Connector::remove_and_reset_channel(){
         LOG_ERROR << "Connector::remove_and_reset_channel()" << endl;
         return -1;
     }
-    channel_->disable_all();
-    eventLoop_->remove_channel(channel_.get());
     int ret = channel_->fd();
+    channel_->disable_all();
+    cout << "remove 1"<< endl;
+    eventLoop_->remove_channel(channel_.get());
+    cout << "remove 2"<< endl;
     Channel *deletePtr = channel_.release();
-    eventLoop_->run_in_loop(bind(&Connector::reset_channel, this, deletePtr));
+    eventLoop_->queue_in_loop(bind(&Connector::reset_channel, this, deletePtr));
     
     if(channel_.get()){
         LOG_ERROR << "Connector::remove_and_reset_channel()" << endl;
     }
-
+   
     return ret;
 }
 
@@ -167,16 +181,43 @@ void Connector::write_handle(){
     if(state_ == kConnecting){
         int socketFd = remove_and_reset_channel();
         int err = Get_socket_error(socketFd);
+        SocketAddr local, remote;
+        if(ipv6_){
+            local = Get_localAddr_6(socketFd);
+            remote = Get_peerAddr_6(socketFd);
+            if(local.get_addr6().sin6_port == remote.get_addr6().sin6_port){
+                bool selfConnect = true;
+                for(int i = 0; i < 4; ++i){
+                    if(local.get_addr6().sin6_addr.__in6_u.__u6_addr32[i] != remote.get_addr6().sin6_addr.__in6_u.__u6_addr32[i]){
+                        selfConnect = false;
+                        break;
+                    }
+                }
+                if(selfConnect){
+                    LOG_WARN << "Connector::handleWrite - Self connect";
+                    retry(socketFd);
+                    return;
+                }
+
+            }
+        }else{
+            local = Get_localAddr_4(socketFd);
+            remote = Get_peerAddr_4(socketFd);
+            if(local.get_addr4().sin_addr.s_addr == remote.get_addr4().sin_addr.s_addr && \
+            local.get_addr4().sin_port == remote.get_addr4().sin_port){
+                LOG_WARN << "Connector::handleWrite - Self connect";
+                retry(socketFd);
+                return;
+            }
+        }
+
         if(err){
             LOG_WARN<< "Connector::handleWrite - SO_ERROR = " << err<<endl;
-            retry(socketFd);
-        }else if(Is_selfConnect(socketFd)){
-            LOG_WARN << "Connector::handleWrite - Self connect";
             retry(socketFd);
         }else{
             state_ = kConnected;
             if(connect_ && newConnectionCallback_){
-                newConnectionCallback_(socketFd);
+                newConnectionCallback_(socketFd, local, remote);
             }else{
                 close(socketFd);
             }
@@ -217,6 +258,10 @@ void Connector::retry(int sockfd){
     }else{
         LOG_DEBUG_MY << "do not connect" << endl;
     }
+}
+
+bool Connector::channel_is_exist(){
+    return channel_.get() != nullptr;
 }
 
 }

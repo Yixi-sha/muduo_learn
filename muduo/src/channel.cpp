@@ -49,6 +49,7 @@ bool Channel::enable_read(){
 
 void Channel::disable_read(){
     events_ &= ~kReadEvent_;
+    revents_ &= ~kReadEvent_;
     update();
 }
 
@@ -62,6 +63,7 @@ bool Channel::enable_write(){
 }
 void Channel::disable_write(){
     events_ &= ~kWriteEvent_;
+    revents_ &= ~kWriteEvent_;
     update();
 }
 

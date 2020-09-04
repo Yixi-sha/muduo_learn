@@ -21,7 +21,7 @@ private:
   bool ipv6_;
 public:
 
-  explicit SocketAddr(uint16_t port, bool ipv6 = false);
+  explicit SocketAddr(uint16_t port = 0, bool ipv6 = false);
   SocketAddr(const string& ip, uint16_t port, bool ipv6 = false);
   SocketAddr(const struct sockaddr_in& addr);
   SocketAddr(const struct sockaddr_in6& addr);

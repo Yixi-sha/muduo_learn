@@ -214,4 +214,8 @@ EventLoop *TcpConnectionFd::get_loop(){
     return eventLoop_;
 }
 
+string TcpConnectionFd::get_name() const{
+    return name_;
+}
+
 }

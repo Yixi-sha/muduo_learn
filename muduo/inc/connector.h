@@ -12,7 +12,7 @@ using namespace std;
 
 class Connector : public Noncopyable{
 public:
-    using NewConnectionCallback = function<void(int)>;
+    using NewConnectionCallback = function<void(int, SocketAddr, SocketAddr)>;
     enum States { 
         kDisconnected = 0, 
         kConnecting, 
@@ -54,6 +54,7 @@ public:
     void start();
     void restart();
     void stop();
+    bool channel_is_exist();
 };
 
 }

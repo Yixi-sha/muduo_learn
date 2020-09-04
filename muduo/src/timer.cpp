@@ -94,19 +94,26 @@ void TimerQueue::handle_read(){
     }
     read_timer(timerFd_, now);
     vector<pair<Timestamp, Timer*>> expireds = get_expired(now);
+    callbacking_ = true;
     for(auto &expired : expireds){
         expired.second->run();
     }
+    callbacking_ = false;
     reset(expireds, now);
+
 }
 
 void TimerQueue::reset(vector<pair<Timestamp, Timer*>> &expireds, Timestamp now){
     for(auto &expired : expireds){
-        if(expired.second->restart(now))
+        if(willDelet_.find(expired.second) != willDelet_.end()){
+            willDelet_.erase(expired.second);
+            delete expired.second;
+        }else if(expired.second->restart(now))
             insert(expired.second);
         else
             delete expired.second;
     }
+
     Timestamp nextExpire = Timestamp::invaild();
     if (!timers_.empty()){
         nextExpire = timers_.begin()->second->expire();
@@ -114,6 +121,7 @@ void TimerQueue::reset(vector<pair<Timestamp, Timer*>> &expireds, Timestamp now)
     if (nextExpire.is_valid()){
         resetTimerfd(timerFd_, nextExpire);
     }
+    willDelet_.clear();
 }
 
 vector<pair<Timestamp, Timer*>> TimerQueue::get_expired(Timestamp now){
@@ -215,6 +223,8 @@ void TimerQueue::cancel_in_loop(TimerId timerId){
         Timer *timer= it->second;
         timers_.erase(it);
         delete timer;
+    }else if(callbacking_ && it == timers_.end()){
+        willDelet_.insert(timerId.get_value());
     }
 }
 
