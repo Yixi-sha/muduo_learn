@@ -16,19 +16,22 @@ class Mutex : public Noncopyable{
 private:
     pthread_mutex_t mutex_;
     pthread_t holder_;
+    bool locked_;
 public:
-    Mutex() : mutex_(PTHREAD_MUTEX_INITIALIZER), holder_(0){
+    Mutex() : mutex_(PTHREAD_MUTEX_INITIALIZER), holder_(0), locked_(false){
 
     }
     int lock(){
         int ret = pthread_mutex_lock(&mutex_);
         if(ret == 0){
+            locked_ = true;
             holder_ = pthread_self();
         }
         return ret;
     }
     int unlock(){
         holder_ = 0;
+        locked_ = false;
         return pthread_mutex_unlock(&mutex_);
     }
     bool is_hold_by_self(){
@@ -36,6 +39,9 @@ public:
     }
     pthread_mutex_t *get_mutex(){
         return &mutex_;
+    }
+    bool if_locked(){
+        return locked_;
     }
 };
 
