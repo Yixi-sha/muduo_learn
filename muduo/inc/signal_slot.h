@@ -26,12 +26,12 @@ private:
     bool tied_;
     weak_ptr<void> wpTie_;
 public:
-    Slot(const weak_ptr<Data> &data, Callback &cb):
+    Slot(const weak_ptr<Data> &data, Callback &&cb):
     wpData_(data), cb_(cb), wpTie_(), tied_(false){
 
     }
 
-    Slot(const weak_ptr<Data> &data, Callback &cb, weak_ptr<void> &tie):
+    Slot(const weak_ptr<Data> &data, Callback &&cb, weak_ptr<void> &tie):
     wpData_(data), cb_(cb), wpTie_(tie), tied_(true){
 
     }
@@ -67,7 +67,7 @@ private:
 
     }
     bool construct_two(){
-        if(!spSlots_->get())
+        if(!spSlots_.get())
             return false;
         return true;
     }
@@ -97,7 +97,7 @@ public:
         if(!copy_on_write())
             return false;
         typename Slots::iterator it = spSlots_->begin();
-        while(it != spSlots_.end()){
+        while(it != spSlots_->end()){
             if(it->expired())
                 spSlots_->erase(it);
             else
@@ -121,19 +121,21 @@ public:
             MutexLockGuard guard(mutex_);
             spSlots = spSlots_;
         }
+        
         typename Slots::iterator it = spSlots->begin(); 
-        while(it != spSlots.end()){
+        
+        while(it != spSlots->end()){
             shared_ptr<Slot<Callback>> slot = it->lock();
             if(slot.get()){
                 shared_ptr<void> guard;
                 if(slot->is_tied()){
                     guard = slot->wp_tie().lock();
+                    if(guard.get()){
+                        slot->callback()(args...);
+                    }
+                }else{
+                    slot->callback()(args...);
                 }
-                if(guard.get()){
-                    slot->callback(args...);
-                }
-            }else{
-                slot->callback(args...);
             }
             ++it;
         }
@@ -149,12 +151,12 @@ Slot<Callback>::~Slot(){
 }
 
 template< typename... ARGS>
-class SingalUsed: Noncopyable{
+class SingalUsed: public Noncopyable{
 public:
     using Callback = function<void(ARGS...)>;
     using Signal_ = Signal<Callback>;
     using Slot_ = Slot<Callback>;
-    using SlotRet = shared_ptr<void> ;
+    using SlotRet = shared_ptr<void>;
 private:
     shared_ptr<Signal_> spSignal_;
 
@@ -162,7 +164,7 @@ private:
 
     }
     bool construct_two(){
-        if(!spSignal_->get())
+        if(!spSignal_.get())
             return false;
         return true;
     } 
@@ -182,7 +184,7 @@ public:
     }
 
     SlotRet connect(Callback &&cb){
-        shared_ptr<Slot_> slot(new Slot_(spSignal_, forward<Callback>(cb)));
+        shared_ptr<Slot_> slot(new Slot_(spSignal_, std::forward<Callback>(cb)));
         if(!slot.get()){
             return slot;
         }
@@ -193,7 +195,7 @@ public:
     }
 
     SlotRet connect(Callback &&cb, const shared_ptr<void>& tie){
-        shared_ptr<Slot_> slot(new Slot_(spSignal_, forward<Callback>(cb)), tie);
+        shared_ptr<Slot_> slot(new Slot_(spSignal_, std::forward<Callback>(cb)), tie);
         if(!slot.get()){
             return slot;
         }

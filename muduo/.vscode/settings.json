@@ -53,6 +53,10 @@
         "map": "cpp",
         "cinttypes": "cpp",
         "set": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "thread": "cpp",
+        "chrono": "cpp",
+        "condition_variable": "cpp",
+        "ratio": "cpp"
     }
 }
