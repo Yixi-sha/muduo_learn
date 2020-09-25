@@ -50,9 +50,7 @@ public:
         if(count_ <= 0)
             return false;
         while(count_ > 0){
-            if(cond_.wait() != 0){
-                return false;
-            }
+            cond_.wait();
         }
         return true;
     }

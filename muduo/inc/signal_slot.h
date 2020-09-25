@@ -206,7 +206,7 @@ public:
     }
 
     void call(ARGS&&... args){
-        spSignal_->call(args...);
+        spSignal_->call(std::forward<ARGS...>(args...));
     }
    
 };
