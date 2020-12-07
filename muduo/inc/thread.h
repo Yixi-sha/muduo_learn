@@ -6,6 +6,7 @@
 
 extern "C"{
 #include <pthread.h>
+#include <unistd.h>
 }
 
 namespace muduo{
@@ -14,7 +15,8 @@ class Thread : public  Noncopyable{
 private:
     //void* (*func_)(void*);
     function<void*(void*)> func_;
-    pthread_t tid_;
+    pid_t tid_;
+    pthread_t pthreadID_;
     void *argv_;
     bool start_;
 public:
@@ -28,13 +30,13 @@ public:
     }
     int start();
     pthread_t tid(){
-        return tid_;
+        return gettid();
     }
     int join(void **status = nullptr){
         if(status == NULL){
-            return pthread_join(tid_, nullptr);
+            return pthread_join(pthreadID_, nullptr);
         }else{
-            return pthread_join(tid_, status);
+            return pthread_join(pthreadID_, status);
         }
         start_ = false;
     }

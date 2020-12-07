@@ -17,7 +17,7 @@ public:
 };   
 
 static void *thread_func(void *argv){
-    ThreadTwo* threadTwo= reinterpret_cast<ThreadTwo*>(argv);
+    ThreadTwo* threadTwo = reinterpret_cast<ThreadTwo*>(argv);
     void * ret = threadTwo->run();
     delete threadTwo;
     return ret;
@@ -31,7 +31,7 @@ int Thread::start(){
         return -1;
     }
     start_ = true;
-    if((ret = pthread_create(&tid_, NULL, thread_func, argv_)) != 0){
+    if((ret = pthread_create(&pthreadID_, NULL, thread_func, argv_)) != 0){
         delete reinterpret_cast<ThreadTwo*>(argv_);
     }
     return ret;

@@ -6,8 +6,10 @@
 #include "noncopyable.h"
 
 extern "C"{
+#include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <sys/types.h>
 }
 
 #include <atomic>
@@ -15,22 +17,23 @@ extern "C"{
 using namespace std;
 
 namespace muduo{
+
 class Mutex : public Noncopyable{
 private:
     pthread_mutex_t mutex_;
-    pthread_t holder_;
+    pid_t holder_;
     atomic_int  locked_;
 public:
     Mutex() : mutex_(PTHREAD_MUTEX_INITIALIZER), holder_(0), locked_(0){
 
     }
     int lock(){
-        if(locked_ == 1 && holder_ == pthread_self())
+        if(locked_ == 1 && gettid() == holder_)
             abort();
         int ret = pthread_mutex_lock(&mutex_);
         if(ret == 0){
             locked_ = 1;
-            holder_ = pthread_self();
+            holder_ = gettid();
         }
         return ret;
     }
@@ -40,7 +43,7 @@ public:
         return pthread_mutex_unlock(&mutex_);
     }
     bool is_hold_by_self(){
-        return holder_ == pthread_self();
+        return holder_ == gettid();
     }
     pthread_mutex_t *get_mutex(){
         return &mutex_;

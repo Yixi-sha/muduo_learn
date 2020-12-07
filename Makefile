@@ -4,10 +4,10 @@ TYPE := cpp
 CC := g++
 DEBUG:=true
 ifeq ($(DEBUG),true)
-CFLAGS += -g
+CFLAGS += -g -std=c++11 
 endif
 
-LFLAGS = -lpthread
+LFLAGS = -lpthread -rdynamic
 
 Moudles := muduo
 Target := app.out

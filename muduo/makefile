@@ -40,6 +40,8 @@ ifeq ($(DEBUG),true)
 FLAGS_CC := $(FLAGS_CC) -g 
 endif
 
+FLAGS_CC += -std=c++11
+
 #include $(DEPS)
 
 
